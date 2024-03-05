@@ -25,7 +25,7 @@ public class TextData {
 
     private String text;
 
-    private String href;
+
 
     private List<TextData> childrenTextData = new LinkedList<>();
 
@@ -46,5 +46,19 @@ public class TextData {
         if (this.lastElement == null || !this.lastElement.equals(data)) {
             this.lastElement = data;
         }
+    }
+
+    public String getHtmlString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("<").append(this.textDataType).append(">");
+        if (this.childrenTextData.size() > 0) {
+            for (TextData child : this.childrenTextData) {
+                builder.append(child.getHtmlString());
+            }
+            builder.append("</").append(this.textDataType).append(">");
+        } else {
+            builder.append("/>");
+        }
+        return builder.toString();
     }
 }

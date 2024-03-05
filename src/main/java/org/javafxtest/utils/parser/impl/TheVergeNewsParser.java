@@ -3,6 +3,7 @@ package org.javafxtest.utils.parser.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.javafxtest.model.NewsModel;
 import org.javafxtest.model.TextData;
+import org.javafxtest.model.impl.*;
 import org.javafxtest.utils.parser.AbstractParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -157,57 +158,58 @@ public class TheVergeNewsParser extends AbstractParser {
                 if (element.attr("class").equals("duet--article--article-body-component")) {
                     log.info("div element is element of content container, processing");
                     for (Element elem : element.children()) {
-                        divTextData.getChildrenTextData().add(processElements(elem));
+                        divTextData.addTextData(processElements(elem));
                     }
                 }
                 return divTextData;
             case "p":
-                TextData pTextData = new TextData(element.tag());
+                PTextData pTextData = new PTextData(element.tag());
                 List<Node> children = element.childNodes();
                 for (Node childrenElement : children) {
                     if (childrenElement instanceof TextNode) {
-                        pTextData.setText(((TextNode) childrenElement).text());
+                        TextData pChildData = new TextData(Tag.valueOf("text"));
+                        pChildData.setText(((TextNode) childrenElement).text());
+                        pTextData.addTextData(pChildData);
                     } else if (childrenElement instanceof Element) {
-                        TextData textFromElement = processElements((Element) childrenElement);
-                        if (textFromElement != null) {
-                            pTextData.getChildrenTextData().add(textFromElement);
+                        TextData dataFromElement = processElements((Element) childrenElement);
+                        if (dataFromElement != null) {
+                            pTextData.addTextData(dataFromElement);
                         }
                     }
                 }
                 return pTextData;
             case "em" :
-                TextData emTextData = new TextData(element.tag());
+                EmTextData emTextData = new EmTextData(element.tag());
                 emTextData.setText(element.text());
                 return emTextData;
             case "ul":
                 Elements liElements = element.select("li.duet--article--dangerously-set-cms-markup.mb-16.pl-12");
-                TextData ulTextData = new TextData();
-                ulTextData.setTextDataType(element.tag());
+                UlTextData ulTextData = new UlTextData(element.tag());
                 for (Element liElement : liElements) {
-                    ulTextData.getChildrenTextData().add(processElements(liElement));
+                    ulTextData.addTextData(processElements(liElement));
                 }
                 return ulTextData;
             case "li":
-                TextData liTextData = new TextData(element.tag());
+                LiTextData liTextData = new LiTextData(element.tag());
                 liTextData.setText(element.text());
                 for (Element liChild : element.children()) {
-                    liTextData.getChildrenTextData().add(processElements(liChild));
+                    liTextData.addTextData(processElements(liChild));
                 }
                 return liTextData;
             case "h3":
             case "h2":
             case "h1":
-                TextData hTextData = new TextData(element.tag());
+                HTextData hTextData = new HTextData(element.tag());
                 for (Node hNode : element.children()) {
                     if (hNode instanceof TextNode) {
                         hTextData.setText(((TextNode) hNode).text());
                     } else if (hNode instanceof Element) {
-                        hTextData.getChildrenTextData().add(processElements((Element) hNode));
+                        hTextData.addTextData(processElements((Element) hNode));
                     }
                 }
                 return hTextData;
             case "a":
-                TextData aTextData = new TextData(element.tag());
+                ATextData aTextData = new ATextData(element.tag());
                 for (Node node : element.childNodes()) {
                     if (node instanceof TextNode) {
                         aTextData.setText(((TextNode) node).text());

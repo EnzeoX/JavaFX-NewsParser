@@ -60,6 +60,8 @@ public class JsoupTest {
         ReflectionTestUtils.setField(this.theVergeNewsParser, "resourceUrl", "");
         NewsModel model = this.theVergeNewsParser.processPage(pageWithH3);
         log.info("Model loaded");
+        log.info("HTML data:");
+        log.info(model.getNewsData().getHtmlString());
     }
 
     @Test
