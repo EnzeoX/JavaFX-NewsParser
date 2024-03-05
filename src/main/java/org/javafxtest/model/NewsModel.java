@@ -18,5 +18,6 @@ public class NewsModel {
     private String newsHeadline;
     private String newsDescription;
     private List<String> newsTextData;
+    private TextData newsData;
     private LocalDateTime publicationTime;
 }

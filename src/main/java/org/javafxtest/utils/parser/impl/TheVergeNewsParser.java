@@ -2,16 +2,20 @@ package org.javafxtest.utils.parser.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.javafxtest.model.NewsModel;
+import org.javafxtest.model.TextData;
 import org.javafxtest.utils.parser.AbstractParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Text;
 
+import javax.swing.text.html.parser.TagElement;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -114,25 +118,121 @@ public class TheVergeNewsParser extends AbstractParser {
             Objects.requireNonNull(articleComponentContainer, "Article component container not found or null!");
             Element articleComponents = articleComponentContainer.child(0);
             List<String> listOfText = new LinkedList<>();
+            TextData mainTextData = new TextData(Tag.valueOf("div"));
             for (Element element : articleComponents.children()) {
-                Object returnedData = elementProcessor(element);
-                if (returnedData instanceof String) {
-                    if (!((String) returnedData).isBlank()) {
-                        listOfText.add((String) returnedData);
-                    }
+//                Object returnedData = elementProcessor(element);
+//                if (returnedData instanceof String) {
+//                    if (!((String) returnedData).isBlank()) {
+//                        listOfText.add((String) returnedData);
+//                    }
+//                }
+                TextData returnedData = processElements(element);
+                if (returnedData != null) {
+                    mainTextData.addTextData(returnedData);
                 }
             }
             NewsModel newsModel = new NewsModel();
             newsModel.setNewsResourceName(getResourceName());
             newsModel.setNewsDescription(newsDescription);
             newsModel.setNewsHeadline(newsHeadline);
-            newsModel.setNewsTextData(listOfText);
+//            newsModel.setNewsTextData(listOfText);
+            newsModel.setNewsData(mainTextData);
             newsModel.setPublicationTime(date);
             return newsModel;
         } catch (IOException e) {
             log.error(e.getMessage());
             return null;
         }
+    }
+
+    private TextData processElements(Element element) {
+        String tag = element.tag().getName();
+        switch (tag) {
+            case "div":
+                if (element.attr("class").startsWith("duet--article--article-body-component clear-both block")) {
+                    log.info("Skipping duet--article--article-body-component clear-both block");
+                    return null;
+                }
+                TextData divTextData = new TextData(element.tag());
+                if (element.attr("class").equals("duet--article--article-body-component")) {
+                    log.info("div element is element of content container, processing");
+                    for (Element elem : element.children()) {
+                        divTextData.getChildrenTextData().add(processElements(elem));
+                    }
+                }
+                return divTextData;
+            case "p":
+                TextData pTextData = new TextData(element.tag());
+                List<Node> children = element.childNodes();
+                for (Node childrenElement : children) {
+                    if (childrenElement instanceof TextNode) {
+                        pTextData.setText(((TextNode) childrenElement).text());
+                    } else if (childrenElement instanceof Element) {
+                        TextData textFromElement = processElements((Element) childrenElement);
+                        if (textFromElement != null) {
+                            pTextData.getChildrenTextData().add(textFromElement);
+                        }
+                    }
+                }
+                return pTextData;
+            case "em" :
+                TextData emTextData = new TextData(element.tag());
+                emTextData.setText(element.text());
+                return emTextData;
+            case "ul":
+                Elements liElements = element.select("li.duet--article--dangerously-set-cms-markup.mb-16.pl-12");
+                TextData ulTextData = new TextData();
+                ulTextData.setTextDataType(element.tag());
+                for (Element liElement : liElements) {
+                    ulTextData.getChildrenTextData().add(processElements(liElement));
+                }
+                return ulTextData;
+            case "li":
+                TextData liTextData = new TextData(element.tag());
+                liTextData.setText(element.text());
+                for (Element liChild : element.children()) {
+                    liTextData.getChildrenTextData().add(processElements(liChild));
+                }
+                return liTextData;
+            case "h3":
+            case "h2":
+            case "h1":
+                TextData hTextData = new TextData(element.tag());
+                for (Node hNode : element.children()) {
+                    if (hNode instanceof TextNode) {
+                        hTextData.setText(((TextNode) hNode).text());
+                    } else if (hNode instanceof Element) {
+                        hTextData.getChildrenTextData().add(processElements((Element) hNode));
+                    }
+                }
+                return hTextData;
+            case "a":
+                TextData aTextData = new TextData(element.tag());
+                for (Node node : element.childNodes()) {
+                    if (node instanceof TextNode) {
+                        aTextData.setText(((TextNode) node).text());
+                        aTextData.setHref(element.attr("href"));
+                        return aTextData;
+                    } else if (node instanceof Element) {
+                        if (node.childNodes().size() > 1) {
+                            for (Element nodesElement : ((Element) node).children()) {
+                                aTextData.getChildrenTextData().add(processElements(nodesElement));
+                            }
+                        } else if (node.childNodes().size() == 1) {
+                            if (node.childNode(0) instanceof TextNode) {
+                                aTextData.setText(((TextNode) node.childNode(0)).text());
+                            } else {
+                                aTextData.getChildrenTextData().add(processElements((Element) node.childNode(0)));
+                            }
+                        }
+                    }
+                }
+                return aTextData;
+            default:
+                log.warn("What is this tag? {}", tag);
+                break;
+        }
+        return null;
     }
 
     private Object elementProcessor(Element element) {
@@ -158,21 +258,15 @@ public class TheVergeNewsParser extends AbstractParser {
                     if (childrenElement instanceof TextNode) {
                         textBuilderForP.append(((TextNode) childrenElement).text());
                     } else if (childrenElement instanceof Element) {
-                        String textFromElement = (String) elementProcessor((Element) childrenElement);
-                        if (textFromElement != null && !textFromElement.isBlank()) {
-                            textBuilderForP.append(textFromElement);
+                        Object textFromElement = elementProcessor((Element) childrenElement);
+                        if (textFromElement != null) {
+                            if (textFromElement instanceof String) {
+                                textBuilderForP.append(textFromElement);
+                            }
                         }
                     }
                 }
                 return textBuilderForP.toString();
-//                StringBuilder collectedText = new StringBuilder();
-//                for (Node textNodes : element.childNodes()) {
-//                    if (textNodes instanceof TextNode) {
-//                        collectedText.append(" ");
-//                        collectedText.append(((TextNode) textNodes).text().trim());
-//                    }
-//                }
-//                return collectedText.toString();
             case "em" :
                 return element.text();
             case "ul":
@@ -198,32 +292,33 @@ public class TheVergeNewsParser extends AbstractParser {
                         h3Builder.append((String) elementProcessor((Element) h3Node));
                     }
                 }
-
+                h3Builder.append("</h3>");
+                return h3Builder.toString();
             case "a":
-                String textToReturn = null;
+                StringBuilder textToReturn = new StringBuilder();
                 for (Node nodes : element.childNodes()) {
                     if (nodes instanceof TextNode) {
-                        textToReturn = ((TextNode) nodes).text();
+                        textToReturn.append(((TextNode) nodes).text());
                         String collectedHref = element.attr("href");
                         if (!collectedHref.startsWith("https://")) {
                             collectedHref = getResourceUrl() + collectedHref;
                         }
-                        textToReturn = textToReturn + " (" + collectedHref + ") ";
+                        textToReturn.append(" (").append(collectedHref).append(") ");
                     } else if (nodes instanceof Element) {
                         if (nodes.childNodes().size() > 1) {
                             for (Element nodesElement : ((Element) nodes).children()) {
-                                textToReturn += elementProcessor(nodesElement);
+                                textToReturn.append(elementProcessor(nodesElement));
                             }
                         } else if (nodes.childNodes().size() == 1) {
                             if (nodes.childNode(0) instanceof TextNode) {
-                                textToReturn += ((TextNode) nodes.childNode(0)).text();
+                                textToReturn.append(((TextNode) nodes.childNode(0)).text());
                             } else {
-                                textToReturn += elementProcessor((Element) nodes.childNode(0));
+                                textToReturn.append(elementProcessor((Element) nodes.childNode(0)));
                             }
                         }
                     }
                 }
-                return textToReturn;
+                return textToReturn.toString();
             default:
                 log.warn("What is this tag? {}", tag);
                 break;
