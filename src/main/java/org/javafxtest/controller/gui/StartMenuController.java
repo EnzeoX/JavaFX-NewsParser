@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.awt.*;
 import java.io.IOException;
 
 /**
@@ -47,6 +49,9 @@ public class StartMenuController {
     @FXML
     private Label newsLabel;
 
+    @FXML
+    private Hyperlink testHyperlink;
+
     public StartMenuController(HostServices hostServices,
                                ApplicationContext applicationContext) {
         this.hostServices = hostServices;
@@ -56,6 +61,17 @@ public class StartMenuController {
     @FXML
     void initialize() {
         mainLoadButton.setOnMouseClicked(this::loadNewsMenu);
+        testHyperlink.setText("The Verge");
+        testHyperlink.setOnAction(actionEvent -> {
+//                    Desktop desktop = Desktop.getDesktop();
+//                    try {
+//                        desktop.browse(java.net.URI.create("https://theverge.com"));
+//                    } catch (IOException e) {
+//                        log.error(e.getMessage());
+//                    }
+                    hostServices.showDocument("https://theverge.com");
+                }
+        );
     }
 
     private void loadNewsMenu(MouseEvent actionEvent) {

@@ -1,6 +1,7 @@
 package org.javafxtest.view.panes;
 
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Paint;
@@ -193,6 +194,7 @@ public class StartPane extends GridPane {
         webView.setId("web_viewer_object");
         webView.getEngine().loadContent(webElement, "text/html");
         bodyPane.getChildren().add(webView);
+
     }
 
 }

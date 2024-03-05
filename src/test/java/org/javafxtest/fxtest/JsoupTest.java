@@ -39,6 +39,8 @@ public class JsoupTest {
 
     private String pageWithLi = "https://www.theverge.com/24087874/smart-kitchen-appliances-cooking-cleaning-vergecast";
     private String simplePage = "https://www.theverge.com/2024/3/3/24089196/apple-no-spring-event-planned-macbook-air-ipad";
+    private String complexPage = "https://www.theverge.com/2024/3/4/24090828/oregon-right-to-repair-sb-1596-parts-pairing";
+    private String pageWithH3 = "https://www.theverge.com/21280354/best-ipad-deals-apple";
 
     @InjectMocks
     private TheVergeNewsParser theVergeNewsParser;
@@ -52,11 +54,38 @@ public class JsoupTest {
     }
 
     @Test
-    public void testService_TheVergeOnePageParse() {
+    public void testService_TheVergeOnePageParseWithH3() {
+        assertNotNull(this.theVergeNewsParser);
+        ReflectionTestUtils.setField(this.theVergeNewsParser, "parserName", "The Verge");
+        ReflectionTestUtils.setField(this.theVergeNewsParser, "resourceUrl", "");
+        NewsModel model = this.theVergeNewsParser.processPage(pageWithH3);
+        log.info("Model loaded");
+    }
+
+    @Test
+    public void testService_TheVergeOnePageParseWithLi() {
         assertNotNull(this.theVergeNewsParser);
         ReflectionTestUtils.setField(this.theVergeNewsParser, "parserName", "The Verge");
         ReflectionTestUtils.setField(this.theVergeNewsParser, "resourceUrl", "");
         NewsModel model = this.theVergeNewsParser.processPage(pageWithLi);
+        log.info("Model loaded");
+    }
+
+    @Test
+    public void testService_TheVergeOnePageParseSimple() {
+        assertNotNull(this.theVergeNewsParser);
+        ReflectionTestUtils.setField(this.theVergeNewsParser, "parserName", "The Verge");
+        ReflectionTestUtils.setField(this.theVergeNewsParser, "resourceUrl", "");
+        NewsModel model = this.theVergeNewsParser.processPage(simplePage);
+        log.info("Model loaded");
+    }
+
+    @Test
+    public void testService_TheVergeOnePageParseComplexPage() {
+        assertNotNull(this.theVergeNewsParser);
+        ReflectionTestUtils.setField(this.theVergeNewsParser, "parserName", "The Verge");
+        ReflectionTestUtils.setField(this.theVergeNewsParser, "resourceUrl", "");
+        NewsModel model = this.theVergeNewsParser.processPage(complexPage);
         log.info("Model loaded");
     }
 

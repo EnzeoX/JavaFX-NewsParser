@@ -143,36 +143,87 @@ public class TheVergeNewsParser extends AbstractParser {
                     log.info("Skipping duet--article--article-body-component clear-both block");
                     return "";
                 }
+                StringBuilder divTextAppender = new StringBuilder();
                 if (element.attr("class").equals("duet--article--article-body-component")) {
                     log.info("div element is element of content container, processing");
-                }
-//                Element elementText;
-//                try {
-//                    elementText = (Element) element.childNodes().get(0);
-//                } catch (IndexOutOfBoundsException ie) {
-//                    log.error("IndexOutOfBound exception for text search");
-//                    break;
-//                }
-//                return elementProcessor(elementText);
-            case "p":
-                StringBuilder collectedText = new StringBuilder();
-                for (Node textNodes : element.childNodes()) {
-                    if (textNodes instanceof TextNode) {
-                        collectedText.append(" ");
-                        collectedText.append(((TextNode) textNodes).text().trim());
+                    for (Element elem : element.children()) {
+                        divTextAppender.append(elementProcessor(elem));
                     }
                 }
-                return collectedText.toString();
+                return divTextAppender.toString();
+            case "p":
+                StringBuilder textBuilderForP = new StringBuilder();
+                List<Node> children = element.childNodes();
+                for (Node childrenElement : children) {
+                    if (childrenElement instanceof TextNode) {
+                        textBuilderForP.append(((TextNode) childrenElement).text());
+                    } else if (childrenElement instanceof Element) {
+                        String textFromElement = (String) elementProcessor((Element) childrenElement);
+                        if (textFromElement != null && !textFromElement.isBlank()) {
+                            textBuilderForP.append(textFromElement);
+                        }
+                    }
+                }
+                return textBuilderForP.toString();
+//                StringBuilder collectedText = new StringBuilder();
+//                for (Node textNodes : element.childNodes()) {
+//                    if (textNodes instanceof TextNode) {
+//                        collectedText.append(" ");
+//                        collectedText.append(((TextNode) textNodes).text().trim());
+//                    }
+//                }
+//                return collectedText.toString();
+            case "em" :
+                return element.text();
             case "ul":
                 Elements liElements = element.select("li.duet--article--dangerously-set-cms-markup.mb-16.pl-12");
                 StringBuilder liBuilderText = new StringBuilder();
                 for (Element liElement : liElements) {
                     liBuilderText.append(liElement.text()).append("\n");
                     Elements aElements = liElement.select("a");
-                    liBuilderText.append(getResourceUrl().isBlank() ? "https://www.theverge.com" : getResourceUrl());
-                    liBuilderText.append(aElements.attr("href")).append("\n\n");
+                    String collectedHref = aElements.attr("href");
+                    if (!collectedHref.startsWith("https://")) {
+                        liBuilderText.append(getResourceUrl().isBlank() ? "https://www.theverge.com" : getResourceUrl());
+                    }
+                    liBuilderText.append(collectedHref).append("\n\n");
                 }
                 return liBuilderText.toString();
+            case "h3":
+                StringBuilder h3Builder = new StringBuilder();
+                h3Builder.append("<h3>");
+                for (Node h3Node : element.children()) {
+                    if (h3Node instanceof TextNode) {
+                        h3Builder.append(((TextNode) h3Node).text());
+                    } else if (h3Node instanceof Element) {
+                        h3Builder.append((String) elementProcessor((Element) h3Node));
+                    }
+                }
+
+            case "a":
+                String textToReturn = null;
+                for (Node nodes : element.childNodes()) {
+                    if (nodes instanceof TextNode) {
+                        textToReturn = ((TextNode) nodes).text();
+                        String collectedHref = element.attr("href");
+                        if (!collectedHref.startsWith("https://")) {
+                            collectedHref = getResourceUrl() + collectedHref;
+                        }
+                        textToReturn = textToReturn + " (" + collectedHref + ") ";
+                    } else if (nodes instanceof Element) {
+                        if (nodes.childNodes().size() > 1) {
+                            for (Element nodesElement : ((Element) nodes).children()) {
+                                textToReturn += elementProcessor(nodesElement);
+                            }
+                        } else if (nodes.childNodes().size() == 1) {
+                            if (nodes.childNode(0) instanceof TextNode) {
+                                textToReturn += ((TextNode) nodes.childNode(0)).text();
+                            } else {
+                                textToReturn += elementProcessor((Element) nodes.childNode(0));
+                            }
+                        }
+                    }
+                }
+                return textToReturn;
             default:
                 log.warn("What is this tag? {}", tag);
                 break;
