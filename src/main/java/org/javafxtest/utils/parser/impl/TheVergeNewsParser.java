@@ -167,7 +167,7 @@ public class TheVergeNewsParser extends AbstractParser {
                 List<Node> children = element.childNodes();
                 for (Node childrenElement : children) {
                     if (childrenElement instanceof TextNode) {
-                        TextData pChildData = new TextData(Tag.valueOf("text"));
+                        TextData pChildData = new TextData(null);
                         pChildData.setText(((TextNode) childrenElement).text());
                         pTextData.addTextData(pChildData);
                     } else if (childrenElement instanceof Element) {

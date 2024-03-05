@@ -25,8 +25,6 @@ public class TextData {
 
     private String text;
 
-
-
     private List<TextData> childrenTextData = new LinkedList<>();
 
     private TextData nextElement = null;
@@ -50,6 +48,9 @@ public class TextData {
 
     public String getHtmlString() {
         StringBuilder builder = new StringBuilder();
+        if (this.textDataType == null) {
+            return getText();
+        }
         builder.append("<").append(this.textDataType).append(">");
         if (this.childrenTextData.size() > 0) {
             for (TextData child : this.childrenTextData) {
