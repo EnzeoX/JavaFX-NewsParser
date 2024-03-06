@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.javafxtest.entity.NewsEntity;
 import org.javafxtest.entity.NewsTextData;
 import org.javafxtest.model.NewsModel;
+import org.javafxtest.model.TextData;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -21,6 +22,8 @@ public class EntityModelMapper {
         NewsModel newsModel = new NewsModel();
         newsModel.setNewsResourceName(entity.getNewsName());
         newsModel.setNewsHeadline(entity.getNewsHeadline());
+        newsModel.setNewsDescription(entity.getNewsDescription());
+        newsModel.setPublicationTime(entity.getPublicationTime());
         List<String> newsTextData = new LinkedList<>();
         for (NewsTextData textData : entity.getNewsTextData()) {
             if (textData != null) {
@@ -28,8 +31,6 @@ public class EntityModelMapper {
             }
         }
         newsModel.setNewsTextData(newsTextData);
-        newsModel.setNewsDescription(entity.getNewsDescription());
-        newsModel.setPublicationTime(entity.getPublicationTime());
         return newsModel;
     }
 
@@ -41,11 +42,21 @@ public class EntityModelMapper {
         newsEntity.setNewsDescription(model.getNewsDescription());
         newsEntity.setPublicationTime(model.getPublicationTime());
         List<NewsTextData> newsTextDataList = new LinkedList<>();
-        for (String text : model.getNewsTextData()) {
-            NewsTextData newsTextData = new NewsTextData();
-            newsTextData.setNews(newsEntity);
-            newsTextData.setTextData(text);
-            newsTextDataList.add(newsTextData);
+        if (model.getNewsData() != null) {
+            for (TextData text : model.getNewsData().getChildrenTextData()) {
+                NewsTextData newsTextData = new NewsTextData();
+                newsTextData.setNews(newsEntity);
+                newsTextData.setTextData(text.getHtmlString());
+                newsTextDataList.add(newsTextData);
+            }
+            newsEntity.setNewsTextData(newsTextDataList);
+        } else if (model.getNewsTextData() != null) {
+            for (String text : model.getNewsTextData()) {
+                NewsTextData newsTextData = new NewsTextData();
+                newsTextData.setNews(newsEntity);
+                newsTextData.setTextData(text);
+                newsTextDataList.add(newsTextData);
+            }
         }
         newsEntity.setNewsTextData(newsTextDataList);
         return newsEntity;

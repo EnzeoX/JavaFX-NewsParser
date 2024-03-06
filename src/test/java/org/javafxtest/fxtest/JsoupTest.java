@@ -1,7 +1,10 @@
 package org.javafxtest.fxtest;
 
 import lombok.extern.slf4j.Slf4j;
+import org.javafxtest.entity.NewsEntity;
+import org.javafxtest.entity.NewsTextData;
 import org.javafxtest.model.NewsModel;
+import org.javafxtest.model.TextData;
 import org.javafxtest.utils.parser.impl.TheVergeNewsParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -41,9 +44,22 @@ public class JsoupTest {
     private String simplePage = "https://www.theverge.com/2024/3/3/24089196/apple-no-spring-event-planned-macbook-air-ipad";
     private String complexPage = "https://www.theverge.com/2024/3/4/24090828/oregon-right-to-repair-sb-1596-parts-pairing";
     private String pageWithH3 = "https://www.theverge.com/21280354/best-ipad-deals-apple";
+    private String pageWithIndexError = "https://www.theverge.com/2024/3/5/24091719/microsoft-new-york-times-openai-motion-dismiss-copyright-lawsuit";
 
     @InjectMocks
     private TheVergeNewsParser theVergeNewsParser;
+
+    @Test
+    public void testService_processPageIndexError() {
+        assertNotNull(this.theVergeNewsParser);
+        ReflectionTestUtils.setField(this.theVergeNewsParser, "parserName", "The Verge");
+        ReflectionTestUtils.setField(this.theVergeNewsParser, "resourceUrl", "");
+        NewsModel model = this.theVergeNewsParser.processPage(pageWithIndexError);
+        log.info("Model loaded");
+        log.info("HTML data:");
+        String htmlString = model.getNewsData().getHtmlString();
+        log.info(htmlString);
+    }
 
     @Test
     public void testService_TheVergeParser() {
@@ -61,7 +77,8 @@ public class JsoupTest {
         NewsModel model = this.theVergeNewsParser.processPage(pageWithH3);
         log.info("Model loaded");
         log.info("HTML data:");
-        log.info(model.getNewsData().getHtmlString());
+        String htmlString = model.getNewsData().getHtmlString();
+        log.info(htmlString);
     }
 
     @Test
@@ -70,6 +87,7 @@ public class JsoupTest {
         ReflectionTestUtils.setField(this.theVergeNewsParser, "parserName", "The Verge");
         ReflectionTestUtils.setField(this.theVergeNewsParser, "resourceUrl", "");
         NewsModel model = this.theVergeNewsParser.processPage(pageWithLi);
+        log.info(model.getNewsData().getHtmlString());
         log.info("Model loaded");
     }
 
@@ -79,6 +97,23 @@ public class JsoupTest {
         ReflectionTestUtils.setField(this.theVergeNewsParser, "parserName", "The Verge");
         ReflectionTestUtils.setField(this.theVergeNewsParser, "resourceUrl", "");
         NewsModel model = this.theVergeNewsParser.processPage(simplePage);
+        TextData textData = model.getNewsData();
+        NewsEntity newsEntity = new NewsEntity();
+        newsEntity.setNewsName("The Verge");
+        newsEntity.setNewsDescription("The Description");
+        newsEntity.setNewsName("The News name");
+        newsEntity.setPublicationTime(LocalDateTime.now());
+        List<NewsTextData> newsTextDataList = new ArrayList<>();
+        if (textData.getChildrenTextData().size() > 0) {
+            for (TextData data : textData.getChildrenTextData()) {
+                NewsTextData newsTextData = new NewsTextData();
+                newsTextData.setNews(newsEntity);
+                newsTextData.setTextData(data.getHtmlString());
+                newsTextDataList.add(newsTextData);
+            }
+        }
+        newsEntity.setNewsTextData(newsTextDataList);
+        log.info("NewsEntity: {}", newsEntity);
         log.info("Model loaded");
     }
 

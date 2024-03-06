@@ -19,10 +19,11 @@ public class HTextData extends TextData {
 
     @Override
     public String getHtmlString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<").append(getTextDataType()).append(">");
-        builder.append(getText());
-        builder.append("</").append(getTextDataType()).append(">");
-        return builder.toString();
+        if (getText() != null && !getText().isEmpty()) {
+            return "<" + getTextDataType() + ">" +
+                    getText() +
+                    "</" + getTextDataType() + ">";
+        }
+        return "";
     }
 }

@@ -25,8 +25,10 @@ public class ATextData extends TextData {
         builder.append("<").append(getTextDataType());
         if (getHref() != null && !getHref().isEmpty()) {
             builder.append(" href=\"").append(getHref()).append("\"");
+            builder.append(">").append(getText()).append("</").append(getTextDataType()).append(">");
+        } else {
+            builder.append("/>");
         }
-        builder.append(">").append(getText()).append("</").append(getTextDataType()).append(">");
         return builder.toString();
     }
 }

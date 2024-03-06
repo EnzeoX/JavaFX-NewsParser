@@ -107,26 +107,23 @@ public class TheVergeNewsParser extends AbstractParser {
 
     public NewsModel processPage(String pageUrl) {
         try {
+            log.info("Processing page: {}", pageUrl);
             Document doc = Jsoup.connect(getResourceUrl() + pageUrl).get();
-            Elements article = doc.select("article#content.mx-auto.my-24.w-full.max-w-container-lg");
+            Elements article = doc.select("article#content.mx-auto.w-full.max-w-container-lg");
             String newsHeadline = article.select("h1.mb-28.font-polysans.text-45.font-bold.leading-100").text(); // get news headline
             String newsDescription = article.select("span.font-polysans.text-22.font-light.leading-110").select("h2").text(); // get news description
-            String publishedTime = article.select("div.duet--article--date-and-comments.mb-20.inline-block.font-polysans.text-12.text-gray-5a") // get news published time
-                    .get(0).children()
-                    .attr("datetime").trim();
+//            String publishedTime = article.select("div.duet--article--date-and-comments.mb-20.inline-block.font-polysans.text-12.text-gray-5a") // get news published time
+//                    .get(0).children()
+//                    .attr("datetime").trim();
+            String publishedTime = doc.select("time[datetime]").attr("datetime");
             LocalDateTime date = LocalDateTime.parse(publishedTime, formatter);
-            Element articleComponentContainer = article.select("div.duet--article--article-body-component-container.clearfix").first();
+            Element articleComponentContainer = article.select("div.duet--article--article-body-component-container").first();
+//            Element articleComponentContainer = article.select("div.duet--article--article-body-component-container.clearfix").first();
             Objects.requireNonNull(articleComponentContainer, "Article component container not found or null!");
             Element articleComponents = articleComponentContainer.child(0);
             List<String> listOfText = new LinkedList<>();
             TextData mainTextData = new TextData(Tag.valueOf("div"));
             for (Element element : articleComponents.children()) {
-//                Object returnedData = elementProcessor(element);
-//                if (returnedData instanceof String) {
-//                    if (!((String) returnedData).isBlank()) {
-//                        listOfText.add((String) returnedData);
-//                    }
-//                }
                 TextData returnedData = processElements(element);
                 if (returnedData != null) {
                     mainTextData.addTextData(returnedData);
@@ -154,7 +151,7 @@ public class TheVergeNewsParser extends AbstractParser {
                     log.info("Skipping duet--article--article-body-component clear-both block");
                     return null;
                 }
-                TextData divTextData = new TextData(element.tag());
+                DivTextData divTextData = new DivTextData(element.tag());
                 if (element.attr("class").equals("duet--article--article-body-component")) {
                     log.info("div element is element of content container, processing");
                     for (Element elem : element.children()) {

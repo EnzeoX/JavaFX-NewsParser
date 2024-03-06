@@ -19,19 +19,19 @@ public class PTextData extends TextData {
 
     @Override
     public String getHtmlString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<").append(getTextDataType()).append(">");
-        if (getText() != null && !getText().isBlank()) {
-            builder.append(getText());
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("<").append(getTextDataType()).append(">");
+        if (getText() != null && !getText().isEmpty()) {
+            buffer.append(getText());
         }
         if (getChildrenTextData().size() > 0) {
             for (TextData data : getChildrenTextData()) {
-                builder.append(data.getHtmlString());
+                buffer.append(data.getHtmlString());
             }
-            builder.append(builder.append("</").append(getTextDataType()).append(">"));
+            buffer.append("</").append(getTextDataType()).append(">");
         } else {
-            builder.append("</>");
+            buffer.append("</>");
         }
-        return builder.toString();
+        return buffer.toString();
     }
 }
