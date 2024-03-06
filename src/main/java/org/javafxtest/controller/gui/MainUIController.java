@@ -28,8 +28,6 @@ import java.io.IOException;
 @Component
 public class MainUIController {
 
-    private final HostServices hostServices;
-
     private final ApplicationContext applicationContext;
 
 
@@ -69,9 +67,7 @@ public class MainUIController {
         });
     }
 
-    public MainUIController(HostServices hostServices,
-                            ApplicationContext applicationContext) {
-        this.hostServices = hostServices;
+    public MainUIController(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 

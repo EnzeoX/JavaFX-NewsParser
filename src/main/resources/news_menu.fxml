@@ -9,6 +9,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.web.WebView?>
 
 <AnchorPane fx:id="mainAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.javafxtest.controller.gui.MainUIController">
    <children>
@@ -41,7 +42,11 @@
                   <Label layoutX="165.0" layoutY="8.0" prefHeight="17.0" prefWidth="86.0" text="News resource:" />
                </children>
             </Pane>
-            <Pane fx:id="bodyPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: lightblue;" GridPane.rowIndex="1" />
+            <Pane fx:id="bodyPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: lightblue;" GridPane.rowIndex="1">
+               <children>
+                  <WebView prefHeight="520.0" prefWidth="600.0" />
+               </children>
+            </Pane>
             <Pane fx:id="bottomPane" prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="2">
                <children>
                   <Button fx:id="bottomPreviousNewsButton" layoutX="167.0" layoutY="13.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="110.0" text="Previous news" />

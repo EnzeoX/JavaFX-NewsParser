@@ -6,13 +6,14 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+import net.rgielen.fxweaver.core.FxmlView;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -24,20 +25,24 @@ import java.io.IOException;
 
 @Slf4j
 @Component
+@FxmlView("start.fxml")
 public class StartMenuController {
-
-    private final HostServices hostServices;
 
     private final ApplicationContext applicationContext;
 
-    @FXML
-    private GridPane mainGridPane;
+    @Autowired
+    public StartMenuController(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     @FXML
     private AnchorPane anchorPaneBody;
 
     @FXML
     private AnchorPane anchorPaneHeader;
+
+    @FXML
+    private GridPane mainGridPane;
 
     @FXML
     private Button mainLoadButton;
@@ -49,28 +54,8 @@ public class StartMenuController {
     private Label newsLabel;
 
     @FXML
-    private Hyperlink testHyperlink;
-
-    public StartMenuController(HostServices hostServices,
-                               ApplicationContext applicationContext) {
-        this.hostServices = hostServices;
-        this.applicationContext = applicationContext;
-    }
-
-    @FXML
     void initialize() {
         mainLoadButton.setOnMouseClicked(this::loadNewsMenu);
-        testHyperlink.setText("The Verge");
-        testHyperlink.setOnAction(actionEvent -> {
-//                    Desktop desktop = Desktop.getDesktop();
-//                    try {
-//                        desktop.browse(java.net.URI.create("https://theverge.com"));
-//                    } catch (IOException e) {
-//                        log.error(e.getMessage());
-//                    }
-                    hostServices.showDocument("https://theverge.com");
-                }
-        );
     }
 
     private void loadNewsMenu(MouseEvent actionEvent) {
