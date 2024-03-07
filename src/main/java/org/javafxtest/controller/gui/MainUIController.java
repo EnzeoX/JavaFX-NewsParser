@@ -8,10 +8,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
@@ -41,11 +38,22 @@ public class MainUIController {
 
     private final List<NewsModel> availableNews = new ArrayList<>();
 
+    private int currentNewsIndex = 0;
+
     //    @Autowired
     private NewsService newsService;
 
     @FXML
+    private VBox bodyPane;
+
+    @FXML
     private GridPane bottomGridPane;
+
+    @FXML
+    private Label currentNewsLabel;
+
+    @FXML
+    private HBox currentNewsPane;
 
     @FXML
     private GridPane headerGridPane;
@@ -81,18 +89,14 @@ public class MainUIController {
 
     @FXML
     void initialize() {
-//        headerBackToMenuButton.setOnAction(this::backToMainMenu);
-//        bottomPreviousNewsButton.setOnAction(action -> {
-//            log.info("Is news service not null? {}", this.newsService);
-//        });
-//        bottomNextNewsButton.setOnAction(action -> {
-//        });
-//        reloadNewsButton.setOnAction(actionEvent -> {
-//            reloadNews();
-//        });
+        toMainMenuButton.setOnAction(this::backToMainMenu);
         nextNewsButton.setOnAction(actionEvent -> {
-            reloadNews();
+            showNextNews();
         });
+        previousNewsButton.setOnAction(actionEvent -> {
+            showPreviousNews();
+        });
+        reloadNews();
     }
 
     private void backToMainMenu(ActionEvent actionEvent) {
@@ -112,40 +116,39 @@ public class MainUIController {
         }
     }
 
-    private void reloadNews() {
-        Task<Void> updateTask = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                newsService.checkForUpdates();
-                return null;
+    private String getNewsAsHtml() {
+        NewsModel newsModel = availableNews.get(currentNewsIndex);
+        if (newsModel.getNewsTextData() != null && newsModel.getNewsTextData().size() > 0) {
+            StringBuilder fullHtml = new StringBuilder();
+            fullHtml.append("<div>");
+            fullHtml.append("<div>")
+                    .append("<img src=\"")
+                    .append("https://i.stack.imgur.com/SBv4T.gif")
+                    .append("alt=\"Be patient...\" width=\"300px\"/>").append("</div>");
+            fullHtml.append(newsModel.getHeadlineAsHtml());
+            fullHtml.append(newsModel.getDescriptionAsHtml());
+            fullHtml.append(newsModel.getNewsPublicationAsHtml());
+            for (String newsText : newsModel.getNewsTextData()) {
+                if (newsText != null) {
+                    fullHtml.append(newsText);
+                }
             }
-        };
-        updateTask.setOnSucceeded(evt -> {
-            // we're on the JavaFX application thread here
-            log.info("News updated!");
-            List<NewsModel> newsModelList = newsService.getAllNews();
-            if (newsModelList != null && newsModelList.size() > 0) {
-                log.info("There is some news...");
-                NewsModel newsModel = newsModelList.get(0);
-                if (newsModel.getNewsTextData() != null && newsModel.getNewsTextData().size() > 0) {
-                    StringBuilder fullHtml = new StringBuilder();
-                    fullHtml.append("<div>");
-                    fullHtml.append("<div>")
-                            .append("<img src=\"")
-                            .append("https://i.stack.imgur.com/SBv4T.gif")
-                            .append("alt=\"Be patient...\" width=\"300px\"/>").append("</div>");
-                    fullHtml.append(newsModel.getHeadlineAsHtml());
-                    fullHtml.append(newsModel.getDescriptionAsHtml());
-                    fullHtml.append(newsModel.getNewsPublicationAsHtml());
-                    for (String newsText : newsModel.getNewsTextData()) {
-                        if (newsText != null) {
-                            fullHtml.append(newsText);
-                        }
-                    }
-                    fullHtml.append("/div>");
-                    mainWebView.getEngine().loadContent(fullHtml.toString(), "text/html");
+            fullHtml.append("</div>");
+            return fullHtml.toString();
+        }
+        return "";
+    }
 
-                    // FOR FULLY LOADED PAGE
+    private void showPreviousNews() {
+        if (availableNews.size() > 0 && currentNewsIndex > 0) {
+            currentNewsIndex -= 1;
+            String fullHtml = getNewsAsHtml();
+            mainWebView.getEngine().loadContent(fullHtml, "text/html");
+
+        }
+    }
+
+    // FOR FULLY LOADED PAGE
 //                    webview.getEngine().getLoadWorker().stateProperty().addListener(
 //                            new ChangeListener<Worker.State>() {
 //                                @Override
@@ -173,8 +176,32 @@ public class MainUIController {
 //                                }
 //                            } );
 
-                }
 
+    private void showNextNews() {
+        if (availableNews.size() > 0 && currentNewsIndex <= availableNews.size()) {
+            currentNewsIndex += 1;
+            String fullHtml = getNewsAsHtml();
+            mainWebView.getEngine().loadContent(fullHtml, "text/html");
+        }
+    }
+
+    private void reloadNews() {
+        Task<Void> updateTask = new Task<>() {
+            @Override
+            protected Void call() {
+                newsService.checkForUpdates();
+                return null;
+            }
+        };
+        updateTask.setOnSucceeded(evt -> {
+            // we're on the JavaFX application thread here
+            log.info("News updated!");
+            List<NewsModel> newsModelList = newsService.getAllNews();
+            if (newsModelList != null && newsModelList.size() > 0) {
+                log.info("There is some news...");
+                availableNews.addAll(newsModelList);
+                log.info("News loaded and added!");
+                showNextNews();
 //                if (newsTextData.getChildrenTextData() != null) {
 //                    String textToSetInWebView = newsTextData.getHtmlString();
 //                    mainNewsView.getEngine().loadContent(textToSetInWebView, "text/html");
@@ -183,13 +210,8 @@ public class MainUIController {
         });
 
         updateTask.setOnFailed(evt -> {
-            // we're on the JavaFX application thread here
-            log.warn("News not updated!");
+            log.error("News not updated!");
         });
         new Thread(updateTask).start();
-    }
-
-    private void nextNews() {
-
     }
 }

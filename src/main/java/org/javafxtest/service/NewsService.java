@@ -107,8 +107,4 @@ public class NewsService {
         }
         return newNewsToAdd;
     }
-
-//    public NewsModel getSpecificNews(NewsFilter filter) {
-//        return null;
-//    }
 }

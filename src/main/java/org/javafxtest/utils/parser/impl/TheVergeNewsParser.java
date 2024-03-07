@@ -115,29 +115,41 @@ public class TheVergeNewsParser extends AbstractParser {
             Document doc = Jsoup.connect(getResourceUrl() + pageUrl).get();
             Elements article = doc.select("article#content.mx-auto.w-full.max-w-container-lg");
             String newsHeadline = article.select("h1.mb-28.font-polysans.text-45.font-bold.leading-100").text(); // get news headline
+            if (newsHeadline.isEmpty()) {
+                newsHeadline = article.select("header#stream-lede.duet--article--lede.mx-auto").select("h1.duet--article--feature-headline.sticky-nav-trigger.mb-8").text();
+            }
             String newsDescription = article.select("span.font-polysans.text-22.font-light.leading-110").select("h2").text(); // get news description
-//            String publishedTime = article.select("div.duet--article--date-and-comments.mb-20.inline-block.font-polysans.text-12.text-gray-5a") // get news published time
-//                    .get(0).children()
-//                    .attr("datetime").trim();
-            String publishedTime = doc.select("time[datetime]").attr("datetime");
+            String publishedTime = doc.select("time[datetime]").attr("datetime"); // get published time
             LocalDateTime date = LocalDateTime.parse(publishedTime, formatter);
             Element articleComponentContainer = article.select("div.duet--article--article-body-component-container").first();
-//            Element articleComponentContainer = article.select("div.duet--article--article-body-component-container.clearfix").first();
             Objects.requireNonNull(articleComponentContainer, "Article component container not found or null!");
-            Element articleComponents = articleComponentContainer.child(0);
-            List<String> listOfText = new LinkedList<>();
             TextData mainTextData = new TextData(Tag.valueOf("div"));
-            for (Element element : articleComponents.children()) {
-                TextData returnedData = processElements(element);
-                if (returnedData != null) {
-                    mainTextData.addTextData(returnedData);
+            if (articleComponentContainer.children().size() > 1) {
+                for (Element articleElement : articleComponentContainer.children()) {
+                    if (articleElement.children().size() > 0) {
+                        for (Element articleElementChild : articleElement.children()) {
+                            TextData returnedData = processElements(articleElementChild);
+                            if (returnedData != null) {
+                                mainTextData.addTextData(returnedData);
+                            }
+                        }
+                    }
+                }
+            } else {
+                Element articleComponents = articleComponentContainer.child(0);
+
+                for (Element element : articleComponents.children()) {
+                    TextData returnedData = processElements(element);
+                    if (returnedData != null) {
+                        mainTextData.addTextData(returnedData);
+                    }
                 }
             }
+
             NewsModel newsModel = new NewsModel();
             newsModel.setNewsResourceName(getResourceName());
             newsModel.setNewsDescription(newsDescription);
             newsModel.setNewsHeadline(newsHeadline);
-//            newsModel.setNewsTextData(listOfText);
             newsModel.setNewsData(mainTextData);
             newsModel.setPublicationTime(date);
             return newsModel;
@@ -157,7 +169,8 @@ public class TheVergeNewsParser extends AbstractParser {
                         return null;
                     }
                     DivTextData divTextData = new DivTextData(element.tag());
-                    if (element.attr("class").equals("duet--article--article-body-component")) {
+                    if (element.attr("class").equals("duet--article--article-body-component")
+                     || element.attr("class").equals("mt-30")) {
                         log.info("div element is element of content container, processing");
                         for (Element elem : element.children()) {
                             TextData elementData = processElements(elem);
@@ -168,6 +181,8 @@ public class TheVergeNewsParser extends AbstractParser {
                         }
                     }
                     return divTextData;
+                case "selection":
+
                 case "p":
                     PTextData pTextData = new PTextData(element.tag());
                     List<Node> children = element.childNodes();
@@ -190,6 +205,9 @@ public class TheVergeNewsParser extends AbstractParser {
                     return emTextData;
                 case "ul":
                     Elements liElements = element.select("li.duet--article--dangerously-set-cms-markup.mb-16.pl-12");
+                    if (liElements.size() == 0) {
+                        liElements = element.select("role");
+                    }
                     UlTextData ulTextData = new UlTextData(element.tag());
                     for (Element liElement : liElements) {
                         ulTextData.addTextData(processElements(liElement));
@@ -197,9 +215,13 @@ public class TheVergeNewsParser extends AbstractParser {
                     return ulTextData;
                 case "li":
                     LiTextData liTextData = new LiTextData(element.tag());
-                    liTextData.setText(element.text());
-                    for (Element liChild : element.children()) {
-                        liTextData.addTextData(processElements(liChild));
+                    if (!element.text().isEmpty()) {
+                        liTextData.setText(element.text());
+                    }
+                    if (element.children().size() > 0) {
+                        for (Element liChild : element.children()) {
+                            liTextData.addTextData(processElements(liChild));
+                        }
                     }
                     return liTextData;
                 case "h3":
@@ -214,6 +236,10 @@ public class TheVergeNewsParser extends AbstractParser {
                         }
                     }
                     return hTextData;
+                case "strong":
+                    StrongTextData strongTextData = new StrongTextData(element.tag());
+                    strongTextData.setText(element.text());
+                    return strongTextData;
                 case "a":
                     ATextData aTextData = new ATextData(element.tag());
                     for (Node node : element.childNodes()) {
@@ -237,7 +263,7 @@ public class TheVergeNewsParser extends AbstractParser {
                     }
                     return aTextData;
                 default:
-                    log.warn("What is this tag? {}", tag);
+                    log.warn("Skipping unknown tag? {}", tag);
                     break;
             }
             return null;
@@ -247,94 +273,94 @@ public class TheVergeNewsParser extends AbstractParser {
         }
     }
 
-    private Object elementProcessor(Element element) {
-        String tag = element.tag().getName();
-        switch (tag) {
-            case "div":
-                if (element.attr("class").startsWith("duet--article--article-body-component clear-both block")) {
-                    log.info("Skipping duet--article--article-body-component clear-both block");
-                    return "";
-                }
-                StringBuilder divTextAppender = new StringBuilder();
-                if (element.attr("class").equals("duet--article--article-body-component")) {
-                    log.info("div element is element of content container, processing");
-                    for (Element elem : element.children()) {
-                        divTextAppender.append(elementProcessor(elem));
-                    }
-                }
-                return divTextAppender.toString();
-            case "p":
-                StringBuilder textBuilderForP = new StringBuilder();
-                List<Node> children = element.childNodes();
-                for (Node childrenElement : children) {
-                    if (childrenElement instanceof TextNode) {
-                        textBuilderForP.append(((TextNode) childrenElement).text());
-                    } else if (childrenElement instanceof Element) {
-                        Object textFromElement = elementProcessor((Element) childrenElement);
-                        if (textFromElement != null) {
-                            if (textFromElement instanceof String) {
-                                textBuilderForP.append(textFromElement);
-                            }
-                        }
-                    }
-                }
-                return textBuilderForP.toString();
-            case "em":
-                return element.text();
-            case "ul":
-                Elements liElements = element.select("li.duet--article--dangerously-set-cms-markup.mb-16.pl-12");
-                StringBuilder liBuilderText = new StringBuilder();
-                for (Element liElement : liElements) {
-                    liBuilderText.append(liElement.text()).append("\n");
-                    Elements aElements = liElement.select("a");
-                    String collectedHref = aElements.attr("href");
-                    if (!collectedHref.startsWith("https://")) {
-                        liBuilderText.append(getResourceUrl().isBlank() ? "https://www.theverge.com" : getResourceUrl());
-                    }
-                    liBuilderText.append(collectedHref).append("\n\n");
-                }
-                return liBuilderText.toString();
-            case "h3":
-                StringBuilder h3Builder = new StringBuilder();
-                h3Builder.append("<h3>");
-                for (Node h3Node : element.children()) {
-                    if (h3Node instanceof TextNode) {
-                        h3Builder.append(((TextNode) h3Node).text());
-                    } else if (h3Node instanceof Element) {
-                        h3Builder.append((String) elementProcessor((Element) h3Node));
-                    }
-                }
-                h3Builder.append("</h3>");
-                return h3Builder.toString();
-            case "a":
-                StringBuilder textToReturn = new StringBuilder();
-                for (Node nodes : element.childNodes()) {
-                    if (nodes instanceof TextNode) {
-                        textToReturn.append(((TextNode) nodes).text());
-                        String collectedHref = element.attr("href");
-                        if (!collectedHref.startsWith("https://")) {
-                            collectedHref = getResourceUrl() + collectedHref;
-                        }
-                        textToReturn.append(" (").append(collectedHref).append(") ");
-                    } else if (nodes instanceof Element) {
-                        if (nodes.childNodes().size() > 1) {
-                            for (Element nodesElement : ((Element) nodes).children()) {
-                                textToReturn.append(elementProcessor(nodesElement));
-                            }
-                        } else if (nodes.childNodes().size() == 1) {
-                            if (nodes.childNode(0) instanceof TextNode) {
-                                textToReturn.append(((TextNode) nodes.childNode(0)).text());
-                            } else {
-                                textToReturn.append(elementProcessor((Element) nodes.childNode(0)));
-                            }
-                        }
-                    }
-                }
-                return textToReturn.toString();
-            default:
-                log.warn("What is this tag? {}", tag);
-                break;
-        }
-        return null;
-    }
+//    private Object elementProcessor(Element element) {
+//        String tag = element.tag().getName();
+//        switch (tag) {
+//            case "div":
+//                if (element.attr("class").startsWith("duet--article--article-body-component clear-both block")) {
+//                    log.info("Skipping duet--article--article-body-component clear-both block");
+//                    return "";
+//                }
+//                StringBuilder divTextAppender = new StringBuilder();
+//                if (element.attr("class").equals("duet--article--article-body-component")) {
+//                    log.info("div element is element of content container, processing");
+//                    for (Element elem : element.children()) {
+//                        divTextAppender.append(elementProcessor(elem));
+//                    }
+//                }
+//                return divTextAppender.toString();
+//            case "p":
+//                StringBuilder textBuilderForP = new StringBuilder();
+//                List<Node> children = element.childNodes();
+//                for (Node childrenElement : children) {
+//                    if (childrenElement instanceof TextNode) {
+//                        textBuilderForP.append(((TextNode) childrenElement).text());
+//                    } else if (childrenElement instanceof Element) {
+//                        Object textFromElement = elementProcessor((Element) childrenElement);
+//                        if (textFromElement != null) {
+//                            if (textFromElement instanceof String) {
+//                                textBuilderForP.append(textFromElement);
+//                            }
+//                        }
+//                    }
+//                }
+//                return textBuilderForP.toString();
+//            case "em":
+//                return element.text();
+//            case "ul":
+//                Elements liElements = element.select("li.duet--article--dangerously-set-cms-markup.mb-16.pl-12");
+//                StringBuilder liBuilderText = new StringBuilder();
+//                for (Element liElement : liElements) {
+//                    liBuilderText.append(liElement.text()).append("\n");
+//                    Elements aElements = liElement.select("a");
+//                    String collectedHref = aElements.attr("href");
+//                    if (!collectedHref.startsWith("https://")) {
+//                        liBuilderText.append(getResourceUrl().isBlank() ? "https://www.theverge.com" : getResourceUrl());
+//                    }
+//                    liBuilderText.append(collectedHref).append("\n\n");
+//                }
+//                return liBuilderText.toString();
+//            case "h3":
+//                StringBuilder h3Builder = new StringBuilder();
+//                h3Builder.append("<h3>");
+//                for (Node h3Node : element.children()) {
+//                    if (h3Node instanceof TextNode) {
+//                        h3Builder.append(((TextNode) h3Node).text());
+//                    } else if (h3Node instanceof Element) {
+//                        h3Builder.append((String) elementProcessor((Element) h3Node));
+//                    }
+//                }
+//                h3Builder.append("</h3>");
+//                return h3Builder.toString();
+//            case "a":
+//                StringBuilder textToReturn = new StringBuilder();
+//                for (Node nodes : element.childNodes()) {
+//                    if (nodes instanceof TextNode) {
+//                        textToReturn.append(((TextNode) nodes).text());
+//                        String collectedHref = element.attr("href");
+//                        if (!collectedHref.startsWith("https://")) {
+//                            collectedHref = getResourceUrl() + collectedHref;
+//                        }
+//                        textToReturn.append(" (").append(collectedHref).append(") ");
+//                    } else if (nodes instanceof Element) {
+//                        if (nodes.childNodes().size() > 1) {
+//                            for (Element nodesElement : ((Element) nodes).children()) {
+//                                textToReturn.append(elementProcessor(nodesElement));
+//                            }
+//                        } else if (nodes.childNodes().size() == 1) {
+//                            if (nodes.childNode(0) instanceof TextNode) {
+//                                textToReturn.append(((TextNode) nodes.childNode(0)).text());
+//                            } else {
+//                                textToReturn.append(elementProcessor((Element) nodes.childNode(0)));
+//                            }
+//                        }
+//                    }
+//                }
+//                return textToReturn.toString();
+//            default:
+//                log.warn("What is this tag? {}", tag);
+//                break;
+//        }
+//        return null;
+//    }
 }

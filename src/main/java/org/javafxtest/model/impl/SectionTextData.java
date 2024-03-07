@@ -11,24 +11,24 @@ import org.jsoup.parser.Tag;
 
 @Getter
 @Setter
-public class LiTextData extends TextData {
+public class SectionTextData extends TextData {
 
-    public LiTextData(Tag dataType) {
+    public SectionTextData(Tag dataType) {
         super(dataType);
     }
 
     @Override
     public String getHtmlString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("<").append(getTextDataType()).append(">");
-        if (getText() != null && !getText().isEmpty()) {
-            builder.append(getText());
-        }
-        if (getChildrenTextData().size() > 0) {
-            for (TextData data : getChildrenTextData()) {
-                builder.append(data.getHtmlString());
+
+        if (getChildrenTextData() != null && getChildrenTextData().size() > 0) {
+            builder.append("<").append(getTextDataType()).append(">");
+            for (TextData textData : getChildrenTextData()) {
+                builder.append(textData.getHtmlString());
             }
             builder.append("</").append(getTextDataType()).append(">");
+        } else {
+            builder.append("<").append(getTextDataType()).append("/>");
         }
         return builder.toString();
     }

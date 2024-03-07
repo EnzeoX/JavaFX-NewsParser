@@ -45,9 +45,23 @@ public class JsoupTest {
     private String complexPage = "https://www.theverge.com/2024/3/4/24090828/oregon-right-to-repair-sb-1596-parts-pairing";
     private String pageWithH3 = "https://www.theverge.com/21280354/best-ipad-deals-apple";
     private String pageWithIndexError = "https://www.theverge.com/2024/3/5/24091719/microsoft-new-york-times-openai-motion-dismiss-copyright-lawsuit";
+    private String pageDifferentStructure = "https://www.theverge.com/24083744/netflix-3-body-problem-trailers-review-interview";
+
 
     @InjectMocks
     private TheVergeNewsParser theVergeNewsParser;
+
+    @Test
+    public void testService_processPageUncommonStructure() {
+        assertNotNull(this.theVergeNewsParser);
+        ReflectionTestUtils.setField(this.theVergeNewsParser, "parserName", "The Verge");
+        ReflectionTestUtils.setField(this.theVergeNewsParser, "resourceUrl", "");
+        NewsModel model = this.theVergeNewsParser.processPage(pageDifferentStructure);
+        log.info("Model loaded");
+        log.info("HTML data:");
+        String htmlString = model.getNewsData().getHtmlString();
+        log.info(htmlString);
+    }
 
     @Test
     public void testService_processPageIndexError() {
