@@ -97,9 +97,13 @@ public class TheVergeNewsParser extends AbstractParser {
     public List<NewsModel> processPages(List<String> pageUrls) {
         List<NewsModel> newsModelList = new LinkedList<>();
         for (String pageUrl : pageUrls) {
-            NewsModel newsModel = processPage(pageUrl);
-            if (newsModel != null) {
-                newsModelList.add(newsModel);
+            try {
+                NewsModel newsModel = processPage(pageUrl);
+                if (newsModel != null) {
+                    newsModelList.add(newsModel);
+                }
+            } catch (Exception e) {
+                log.error("Exception happened while processPage. Page url: {}, exception: {}, message: {}", pageUrl, e.getClass(), e.getMessage());
             }
         }
         return newsModelList;
@@ -144,94 +148,103 @@ public class TheVergeNewsParser extends AbstractParser {
     }
 
     private TextData processElements(Element element) {
-        String tag = element.tag().getName();
-        switch (tag) {
-            case "div":
-                if (element.attr("class").startsWith("duet--article--article-body-component clear-both block")) {
-                    log.info("Skipping duet--article--article-body-component clear-both block");
-                    return null;
-                }
-                DivTextData divTextData = new DivTextData(element.tag());
-                if (element.attr("class").equals("duet--article--article-body-component")) {
-                    log.info("div element is element of content container, processing");
-                    for (Element elem : element.children()) {
-                        divTextData.addTextData(processElements(elem));
+        try {
+            String tag = element.tag().getName();
+            switch (tag) {
+                case "div":
+                    if (element.attr("class").startsWith("duet--article--article-body-component clear-both block")) {
+                        log.info("Skipping duet--article--article-body-component clear-both block");
+                        return null;
                     }
-                }
-                return divTextData;
-            case "p":
-                PTextData pTextData = new PTextData(element.tag());
-                List<Node> children = element.childNodes();
-                for (Node childrenElement : children) {
-                    if (childrenElement instanceof TextNode) {
-                        TextData pChildData = new TextData(null);
-                        pChildData.setText(((TextNode) childrenElement).text());
-                        pTextData.addTextData(pChildData);
-                    } else if (childrenElement instanceof Element) {
-                        TextData dataFromElement = processElements((Element) childrenElement);
-                        if (dataFromElement != null) {
-                            pTextData.addTextData(dataFromElement);
+                    DivTextData divTextData = new DivTextData(element.tag());
+                    if (element.attr("class").equals("duet--article--article-body-component")) {
+                        log.info("div element is element of content container, processing");
+                        for (Element elem : element.children()) {
+                            TextData elementData = processElements(elem);
+                            if (elementData == null) {
+                                continue;
+                            }
+                            divTextData.addTextData(elementData);
                         }
                     }
-                }
-                return pTextData;
-            case "em" :
-                EmTextData emTextData = new EmTextData(element.tag());
-                emTextData.setText(element.text());
-                return emTextData;
-            case "ul":
-                Elements liElements = element.select("li.duet--article--dangerously-set-cms-markup.mb-16.pl-12");
-                UlTextData ulTextData = new UlTextData(element.tag());
-                for (Element liElement : liElements) {
-                    ulTextData.addTextData(processElements(liElement));
-                }
-                return ulTextData;
-            case "li":
-                LiTextData liTextData = new LiTextData(element.tag());
-                liTextData.setText(element.text());
-                for (Element liChild : element.children()) {
-                    liTextData.addTextData(processElements(liChild));
-                }
-                return liTextData;
-            case "h3":
-            case "h2":
-            case "h1":
-                HTextData hTextData = new HTextData(element.tag());
-                for (Node hNode : element.children()) {
-                    if (hNode instanceof TextNode) {
-                        hTextData.setText(((TextNode) hNode).text());
-                    } else if (hNode instanceof Element) {
-                        hTextData.addTextData(processElements((Element) hNode));
-                    }
-                }
-                return hTextData;
-            case "a":
-                ATextData aTextData = new ATextData(element.tag());
-                for (Node node : element.childNodes()) {
-                    if (node instanceof TextNode) {
-                        aTextData.setText(((TextNode) node).text());
-                        aTextData.setHref(element.attr("href"));
-                        return aTextData;
-                    } else if (node instanceof Element) {
-                        if (node.childNodes().size() > 1) {
-                            for (Element nodesElement : ((Element) node).children()) {
-                                aTextData.getChildrenTextData().add(processElements(nodesElement));
-                            }
-                        } else if (node.childNodes().size() == 1) {
-                            if (node.childNode(0) instanceof TextNode) {
-                                aTextData.setText(((TextNode) node.childNode(0)).text());
-                            } else {
-                                aTextData.getChildrenTextData().add(processElements((Element) node.childNode(0)));
+                    return divTextData;
+                case "p":
+                    PTextData pTextData = new PTextData(element.tag());
+                    List<Node> children = element.childNodes();
+                    for (Node childrenElement : children) {
+                        if (childrenElement instanceof TextNode) {
+                            TextData pChildData = new TextData(null);
+                            pChildData.setText(((TextNode) childrenElement).text());
+                            pTextData.addTextData(pChildData);
+                        } else if (childrenElement instanceof Element) {
+                            TextData dataFromElement = processElements((Element) childrenElement);
+                            if (dataFromElement != null) {
+                                pTextData.addTextData(dataFromElement);
                             }
                         }
                     }
-                }
-                return aTextData;
-            default:
-                log.warn("What is this tag? {}", tag);
-                break;
+                    return pTextData;
+                case "em":
+                    EmTextData emTextData = new EmTextData(element.tag());
+                    emTextData.setText(element.text());
+                    return emTextData;
+                case "ul":
+                    Elements liElements = element.select("li.duet--article--dangerously-set-cms-markup.mb-16.pl-12");
+                    UlTextData ulTextData = new UlTextData(element.tag());
+                    for (Element liElement : liElements) {
+                        ulTextData.addTextData(processElements(liElement));
+                    }
+                    return ulTextData;
+                case "li":
+                    LiTextData liTextData = new LiTextData(element.tag());
+                    liTextData.setText(element.text());
+                    for (Element liChild : element.children()) {
+                        liTextData.addTextData(processElements(liChild));
+                    }
+                    return liTextData;
+                case "h3":
+                case "h2":
+                case "h1":
+                    HTextData hTextData = new HTextData(element.tag());
+                    for (Node hNode : element.children()) {
+                        if (hNode instanceof TextNode) {
+                            hTextData.setText(((TextNode) hNode).text());
+                        } else if (hNode instanceof Element) {
+                            hTextData.addTextData(processElements((Element) hNode));
+                        }
+                    }
+                    return hTextData;
+                case "a":
+                    ATextData aTextData = new ATextData(element.tag());
+                    for (Node node : element.childNodes()) {
+                        if (node instanceof TextNode) {
+                            aTextData.setText(((TextNode) node).text());
+                            aTextData.setHref(element.attr("href"));
+                            return aTextData;
+                        } else if (node instanceof Element) {
+                            if (node.childNodes().size() > 1) {
+                                for (Element nodesElement : ((Element) node).children()) {
+                                    aTextData.getChildrenTextData().add(processElements(nodesElement));
+                                }
+                            } else if (node.childNodes().size() == 1) {
+                                if (node.childNode(0) instanceof TextNode) {
+                                    aTextData.setText(((TextNode) node.childNode(0)).text());
+                                } else {
+                                    aTextData.getChildrenTextData().add(processElements((Element) node.childNode(0)));
+                                }
+                            }
+                        }
+                    }
+                    return aTextData;
+                default:
+                    log.warn("What is this tag? {}", tag);
+                    break;
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("Exception happened while processing element {}, error type {}, message: {}", element, e.getClass(), e.getMessage());
+            return null;
         }
-        return null;
     }
 
     private Object elementProcessor(Element element) {
@@ -266,7 +279,7 @@ public class TheVergeNewsParser extends AbstractParser {
                     }
                 }
                 return textBuilderForP.toString();
-            case "em" :
+            case "em":
                 return element.text();
             case "ul":
                 Elements liElements = element.select("li.duet--article--dangerously-set-cms-markup.mb-16.pl-12");

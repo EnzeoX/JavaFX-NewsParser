@@ -88,12 +88,12 @@ public class NewsService {
         return EntityModelMapper.listOfEntitiesToListOfModels(entityList);
     }
 
-    public NewsEntity getLatestNewsFor(String newsName) {
+    public NewsEntity getActualNewsFor(String newsName) {
         return this.newsRepository.getLatestNewsFor(newsName);
     }
 
     private List<NewsModel> getLatestNewsForName(String newsName) {
-        NewsEntity latestNewsEntity = getLatestNewsFor(newsName);
+        NewsEntity latestNewsEntity = getActualNewsFor(newsName);
         List<NewsModel> parsedNews = parserMap.get(newsName).parseNewsResource();
         List<NewsModel> newNewsToAdd = new LinkedList<>();
         for (NewsModel model : parsedNews) {

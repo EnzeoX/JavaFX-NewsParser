@@ -22,33 +22,31 @@ public class FxRunner extends Application {
 
     private ConfigurableApplicationContext context;
 
-    private String applicationTitle = "";
-
     @Override
     public void init() {
         String[] parameters = getParameters().getRaw().toArray(new String[0]);
-//        ApplicationContextInitializer<GenericApplicationContext> initializer =
-//                applicationContext -> {
-//                    applicationContext.registerBean(Application.class, () -> FxRunner.this);
-//                    applicationContext.registerBean(Parameters.class, this::getParameters);
-//                    applicationContext.registerBean(HostServices.class, this::getHostServices);
-//                };
+        ApplicationContextInitializer<GenericApplicationContext> initializer =
+                applicationContext -> {
+                    applicationContext.registerBean(Application.class, () -> FxRunner.this);
+                    applicationContext.registerBean(Parameters.class, this::getParameters);
+                    applicationContext.registerBean(HostServices.class, this::getHostServices);
+                };
         this.context = new SpringApplicationBuilder()
                 .sources(FxTestApplication.class)
-//                .initializers(initializer)
+                .initializers(initializer)
                 .run(parameters);
     }
 
     @Override
     public void start(Stage stage) {
-//        this.context.publishEvent(new StageReadyEvent(stage)); FOR STAGE LISTENER
-        FxWeaver fxWeaver = context.getBean(FxWeaver.class);
-        Parent root = fxWeaver.loadView(StartMenuController.class);
-        Scene scene = new Scene(root);
-        stage.setScene(scene);
-        stage.sizeToScene();
-        stage.setTitle(this.applicationTitle);
-        stage.show();
+        this.context.publishEvent(new StageReadyEvent(stage));
+//        FxWeaver fxWeaver = context.getBean(FxWeaver.class);
+//        Parent root = fxWeaver.loadView(StartMenuController.class);
+//        Scene scene = new Scene(root);
+//        stage.setScene(scene);
+//        stage.sizeToScene();
+//        stage.setTitle(this.applicationTitle);
+//        stage.show();
     }
 
     @Override

@@ -4,7 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 
 /**
  * @author Nikolay Boyko
@@ -20,4 +23,24 @@ public class NewsModel {
     private List<String> newsTextData;
     private TextData newsData;
     private LocalDateTime publicationTime;
+
+    public String getHeadlineAsHtml() {
+        return this.newsHeadline != null ?
+                "<div><h2>" + this.newsHeadline + "</h2></div>" : "";
+    }
+
+    public String getDescriptionAsHtml() {
+        return this.newsDescription != null ?
+                "<div><i>" + this.newsDescription + "</i></div>" : "";
+    }
+
+    public String getNewsPublicationAsHtml() {
+        if (this.publicationTime != null) {
+
+            String text = this.publicationTime.format(DateTimeFormatter.ofPattern("dd LLLL yyyy"));
+            return "<div style=\"margin-left: auto; margin-right: 0;\"><i>" + text + "</i></div>";
+        } else {
+            return "";
+        }
+    }
 }

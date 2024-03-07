@@ -83,7 +83,7 @@ public class RepoTest {
     }
 
     @Test
-    public void testGetDataAndSave() {
+    public void testGetDataAndSaveAndGet() {
         assertNotNull(this.theVergeNewsParser);
         ReflectionTestUtils.setField(this.theVergeNewsParser, "parserName", "The Verge");
         ReflectionTestUtils.setField(this.theVergeNewsParser, "resourceUrl", "https://www.theverge.com");
@@ -91,5 +91,7 @@ public class RepoTest {
         List<NewsEntity> newsEntityList = EntityModelMapper.listOfModelsToEntity(modelList);
         assertNotNull(newsEntityList);
         newsRepository.saveAll(newsEntityList);
+        List<NewsEntity> entityList = newsRepository.findAll();
+        assertNotNull(entityList.get(0));
     }
 }

@@ -34,6 +34,6 @@ public class NewsEntity {
     @Column(name = "publication_time")
     private LocalDateTime publicationTime;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "news", cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "news", cascade = CascadeType.ALL)
     private List<NewsTextData> newsTextData;
 }
