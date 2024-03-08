@@ -10,6 +10,7 @@ import org.javafxtest.utils.parser.AbstractParser;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 
 /**
@@ -34,8 +35,19 @@ public class NewsService {
         }
     }
 
+    public void removeAllRecordsForNotToday() {
+        this.newsRepository.deleteRowsNotToday(LocalDate.now());
+    }
+
     public void checkForUpdates() {
         try {
+            // before all check if need to delete old records
+            if (this.newsRepository.hasRowsNotToday(LocalDate.now())) {
+                log.info("Database contains old data, removing");
+                removeAllRecordsForNotToday();
+            } else {
+                log.info("Database don't have old data");
+            }
             List<NewsModel> listOfLatestNews = new LinkedList<>();
             if (this.newsRepository.count() > 0) {      // DB already contains some news, and just needs to be updated if so
                 log.info("Database contains news, updating...");

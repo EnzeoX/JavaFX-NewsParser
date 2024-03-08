@@ -148,10 +148,6 @@ public class MainUIController {
         if (newsModel.getNewsTextData() != null && newsModel.getNewsTextData().size() > 0) {
             StringBuilder fullHtml = new StringBuilder();
             fullHtml.append("<div>");
-//            fullHtml.append("<div>")
-//                    .append("<img src=\"")
-//                    .append("https://i.stack.imgur.com/SBv4T.gif")
-//                    .append("alt=\"Be patient...\" width=\"300px\"/>").append("</div>");
             fullHtml.append(newsModel.getDivMediaSource());
             fullHtml.append(newsModel.getHeadlineAsHtml());
             fullHtml.append(newsModel.getDescriptionAsHtml());
