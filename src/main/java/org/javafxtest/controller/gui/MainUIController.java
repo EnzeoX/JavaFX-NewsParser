@@ -127,12 +127,10 @@ public class MainUIController {
         timePeriodSelection.setItems(FXCollections.observableArrayList(timePeriods));
         timePeriodSelection.getSelectionModel().selectFirst();
         timePeriodSelection.setOnAction(actionEvent -> {
-//            Platform.runLater(() -> {
                 if (!currentActiveItem.equals(timePeriodSelection.getValue())) {
                     currentActiveItem = timePeriodSelection.getValue();
                     reloadNews(currentActiveItem);
                 }
-//            });
         });
         nextNewsButton.setOnAction(actionEvent -> {
             if (!isExecutingPage.get()) {

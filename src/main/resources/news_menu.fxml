@@ -58,7 +58,7 @@
             </HBox>
             <VBox fx:id="bodyPane" alignment="CENTER" minHeight="100.0" minWidth="600.0" nodeOrientation="LEFT_TO_RIGHT" style="-fx-background-color: white;" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="CENTER" GridPane.vgrow="ALWAYS">
                <children>
-                  <WebView fx:id="mainWebView" disable="true" minHeight="511.0" minWidth="600.0" prefHeight="511.0" prefWidth="600.0" VBox.vgrow="ALWAYS" />
+                  <WebView fx:id="mainWebView" minHeight="511.0" minWidth="600.0" prefHeight="511.0" prefWidth="600.0" VBox.vgrow="ALWAYS" />
                </children>
             </VBox>
             <HBox fx:id="bottomHBox" alignment="CENTER" fillHeight="false" maxHeight="30.0" minHeight="30.0" prefHeight="30.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER" GridPane.vgrow="NEVER">
