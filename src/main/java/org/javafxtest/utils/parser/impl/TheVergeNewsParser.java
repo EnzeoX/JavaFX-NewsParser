@@ -118,6 +118,19 @@ public class TheVergeNewsParser extends AbstractParser {
             if (newsHeadline.isEmpty()) {
                 newsHeadline = article.select("header#stream-lede.duet--article--lede.mx-auto").select("h1.duet--article--feature-headline.sticky-nav-trigger.mb-8").text();
             }
+            Elements mediaResource = doc.select("figure.duet--article--lede-image.w-full");
+            // try to find which type of
+            String urlMediaResource = null;
+            Tag mediaResourceType = null;
+            if (!mediaResource.select("img").isEmpty()) {
+                log.info("UrlMediaResource is img");
+                mediaResourceType = Tag.valueOf("img");
+                urlMediaResource = mediaResource.select("img").attr("src");
+            } else if (!mediaResource.select("video").isEmpty()) {
+                log.info("UrlMediaResource is video");
+                mediaResourceType = Tag.valueOf("video");
+                urlMediaResource = mediaResource.select("video").attr("src");
+            }
             String newsDescription = article.select("span.font-polysans.text-22.font-light.leading-110").select("h2").text(); // get news description
             String publishedTime = doc.select("time[datetime]").attr("datetime"); // get published time
             LocalDateTime date = LocalDateTime.parse(publishedTime, formatter);
@@ -147,6 +160,10 @@ public class TheVergeNewsParser extends AbstractParser {
             }
 
             NewsModel newsModel = new NewsModel();
+            if (urlMediaResource != null && !urlMediaResource.isEmpty()) {
+                newsModel.setSourceType(mediaResourceType);
+                newsModel.setUrlMediaSource(urlMediaResource);
+            }
             newsModel.setNewsResourceName(getResourceName());
             newsModel.setNewsDescription(newsDescription);
             newsModel.setNewsHeadline(newsHeadline);

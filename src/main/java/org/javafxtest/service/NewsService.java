@@ -1,11 +1,13 @@
 package org.javafxtest.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.javafxtest.entity.NewsEntity;
 import org.javafxtest.model.NewsModel;
 import org.javafxtest.repository.NewsRepository;
 import org.javafxtest.utils.EntityModelMapper;
 import org.javafxtest.utils.parser.AbstractParser;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -33,30 +35,34 @@ public class NewsService {
     }
 
     public void checkForUpdates() {
-        List<NewsModel> listOfLatestNews = new LinkedList<>();
-        if (this.newsRepository.count() > 0) {      // DB already contains some news, and just needs to be updated if so
-            log.info("Database contains news, updating...");
-            for (String newsName : parserNames) {
-                List<NewsModel> newsModelList = getLatestNewsForName(newsName);
-                if (newsModelList.size() > 0) {
-                    listOfLatestNews.addAll(newsModelList);
+        try {
+            List<NewsModel> listOfLatestNews = new LinkedList<>();
+            if (this.newsRepository.count() > 0) {      // DB already contains some news, and just needs to be updated if so
+                log.info("Database contains news, updating...");
+                for (String newsName : parserNames) {
+                    List<NewsModel> newsModelList = getLatestNewsForName(newsName);
+                    if (newsModelList.size() > 0) {
+                        listOfLatestNews.addAll(newsModelList);
+                    }
+                }
+                if (listOfLatestNews.size() > 0) {
+                    log.info("Bunch of new news, adding data. List size: {}", listOfLatestNews.size());
+                    saveAllNews(listOfLatestNews);
+                }
+            } else {                                    // No data in DB, load all
+                log.info("Database is empty, trying to get some news...");
+                for (String name : parserNames) {
+                    List<NewsModel> parsedNews = parserMap.get(name).parseNewsResource();
+                    if (parsedNews.size() > 0) {
+                        listOfLatestNews.addAll(parsedNews);
+                    }
                 }
             }
             if (listOfLatestNews.size() > 0) {
-                log.info("Bunch of new news, adding data. List size: {}", listOfLatestNews.size());
                 saveAllNews(listOfLatestNews);
             }
-        } else {                                    // No data in DB, load all
-            log.info("Database is empty, trying to get some news...");
-            for (String name : parserNames) {
-                List<NewsModel> parsedNews = parserMap.get(name).parseNewsResource();
-                if (parsedNews.size() > 0) {
-                    listOfLatestNews.addAll(parsedNews);
-                }
-            }
-        }
-        if (listOfLatestNews.size() > 0) {
-            saveAllNews(listOfLatestNews);
+        } catch (Exception sqlException) {
+            log.error("SQL error message: {}", sqlException.getMessage());
         }
     }
 
@@ -66,7 +72,11 @@ public class NewsService {
             return;
         }
         List<NewsEntity> newsEntityList = EntityModelMapper.listOfModelsToEntity(listOfModels);
-        this.newsRepository.saveAll(newsEntityList);
+        try {
+            this.newsRepository.saveAll(newsEntityList);
+        } catch (Exception e) {
+            log.error("SQL error message: {}", e.getMessage());
+        }
     }
 
     public void saveNews(NewsModel data) {

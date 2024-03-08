@@ -5,6 +5,7 @@ import org.javafxtest.entity.NewsEntity;
 import org.javafxtest.entity.NewsTextData;
 import org.javafxtest.model.NewsModel;
 import org.javafxtest.model.TextData;
+import org.jsoup.parser.Tag;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +25,8 @@ public class EntityModelMapper {
         newsModel.setNewsHeadline(entity.getNewsHeadline());
         newsModel.setNewsDescription(entity.getNewsDescription());
         newsModel.setPublicationTime(entity.getPublicationTime());
+        newsModel.setUrlMediaSource(entity.getNewsMediaUrl());
+        newsModel.setSourceType(Tag.valueOf(entity.getNewsHeaderMedia()));
         List<String> newsTextData = new LinkedList<>();
         for (NewsTextData textData : entity.getNewsTextData()) {
             if (textData != null) {
@@ -41,6 +44,8 @@ public class EntityModelMapper {
         newsEntity.setNewsHeadline(model.getNewsHeadline());
         newsEntity.setNewsDescription(model.getNewsDescription());
         newsEntity.setPublicationTime(model.getPublicationTime());
+        newsEntity.setNewsMediaUrl(model.getUrlMediaSource());
+        newsEntity.setNewsHeaderMedia(model.getSourceType().getName());
         List<NewsTextData> newsTextDataList = new LinkedList<>();
         if (model.getNewsData() != null) {
             for (TextData text : model.getNewsData().getChildrenTextData()) {

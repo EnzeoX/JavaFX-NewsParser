@@ -13,7 +13,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.web.WebView?>
 
-<VBox fx:id="mainVBoxPane" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.javafxtest.controller.gui.MainUIController">
+<VBox fx:id="mainVBoxPane" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="600.0" prefWidth="600.0" style="-fx-border-color: purple; -fx-border-width: 2;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.javafxtest.controller.gui.MainUIController">
    <children>
       <GridPane fx:id="mainGridPane" style="-fx-background-color: grey;" VBox.vgrow="ALWAYS">
         <columnConstraints>
@@ -64,7 +64,7 @@
             </HBox>
             <VBox fx:id="bodyPane" alignment="CENTER" minHeight="100.0" minWidth="600.0" nodeOrientation="LEFT_TO_RIGHT" style="-fx-background-color: white;" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="CENTER" GridPane.vgrow="ALWAYS">
                <children>
-                  <WebView fx:id="mainWebView" minHeight="100.0" minWidth="600.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS" />
+                  <WebView fx:id="mainWebView" minHeight="100.0" minWidth="600.0" prefHeight="-1.0" prefWidth="600.0" VBox.vgrow="ALWAYS" />
                </children>
             </VBox>
             <HBox alignment="CENTER" fillHeight="false" maxHeight="30.0" minHeight="30.0" prefHeight="30.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER" GridPane.vgrow="NEVER">

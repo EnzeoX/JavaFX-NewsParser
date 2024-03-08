@@ -1,22 +1,23 @@
 package org.javafxtest.controller.gui;
 
-import javafx.application.HostServices;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
-import org.javafxtest.entity.NewsEntity;
 import org.javafxtest.model.NewsModel;
-import org.javafxtest.model.TextData;
 import org.javafxtest.service.NewsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Nikolay Boyko
@@ -37,6 +41,10 @@ public class MainUIController {
     private final ApplicationContext applicationContext;
 
     private final List<NewsModel> availableNews = new ArrayList<>();
+
+    private final ExecutorService executor = Executors.newCachedThreadPool();
+
+    private final AtomicBoolean isExecutingPage = new AtomicBoolean(false);
 
     private int currentNewsIndex = 0;
 
@@ -90,11 +98,29 @@ public class MainUIController {
     @FXML
     void initialize() {
         toMainMenuButton.setOnAction(this::backToMainMenu);
-        nextNewsButton.setOnAction(actionEvent -> {
-            showNextNews();
-        });
         previousNewsButton.setOnAction(actionEvent -> {
-            showPreviousNews();
+            if (!isExecutingPage.get()) {
+                Platform.runLater(() -> {
+                    isExecutingPage.set(true);
+                    showPreviousNews(actionEvent);
+                    isExecutingPage.set(false);
+                });
+            }
+        });
+//        mainWebView.getEngine().getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+//            if (newState == Worker.State.SUCCEEDED) {
+//                // new page has loaded, process:
+//                log.info("Page loaded");
+//            }
+//        });
+        nextNewsButton.setOnAction(actionEvent -> {
+            if (!isExecutingPage.get()) {
+                Platform.runLater(() -> {
+                    isExecutingPage.set(true);
+                    showNextNews(actionEvent);
+                    isExecutingPage.set(false);
+                });
+            }
         });
         reloadNews();
     }
@@ -102,6 +128,7 @@ public class MainUIController {
     private void backToMainMenu(ActionEvent actionEvent) {
         Stage stage;
         try {
+            executor.shutdownNow();
             Scene currentScene = toMainMenuButton.getScene();
             stage = (Stage) currentScene.getWindow();
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/start.fxml"));
@@ -121,10 +148,11 @@ public class MainUIController {
         if (newsModel.getNewsTextData() != null && newsModel.getNewsTextData().size() > 0) {
             StringBuilder fullHtml = new StringBuilder();
             fullHtml.append("<div>");
-            fullHtml.append("<div>")
-                    .append("<img src=\"")
-                    .append("https://i.stack.imgur.com/SBv4T.gif")
-                    .append("alt=\"Be patient...\" width=\"300px\"/>").append("</div>");
+//            fullHtml.append("<div>")
+//                    .append("<img src=\"")
+//                    .append("https://i.stack.imgur.com/SBv4T.gif")
+//                    .append("alt=\"Be patient...\" width=\"300px\"/>").append("</div>");
+            fullHtml.append(newsModel.getDivMediaSource());
             fullHtml.append(newsModel.getHeadlineAsHtml());
             fullHtml.append(newsModel.getDescriptionAsHtml());
             fullHtml.append(newsModel.getNewsPublicationAsHtml());
@@ -139,14 +167,27 @@ public class MainUIController {
         return "";
     }
 
-    private void showPreviousNews() {
-        if (availableNews.size() > 0 && currentNewsIndex > 0) {
+    private void showPreviousNews(ActionEvent actionEvent) {
+        if (actionEvent != null && actionEvent.getSource() instanceof Button) {
+            ((Button) actionEvent.getSource()).setDisable(true);
+        }
+        if (availableNews.size() > 0 && currentNewsIndex - 1 > 0) {
             currentNewsIndex -= 1;
+            log.info("Current page counter: {}", currentNewsIndex);
             String fullHtml = getNewsAsHtml();
             mainWebView.getEngine().loadContent(fullHtml, "text/html");
+        }
+        if (nextNewsButton.isDisabled()) {
+            nextNewsButton.setDisable(false);
+        }
+        if (actionEvent != null && actionEvent.getSource() instanceof Button) {
+            if (currentNewsIndex != 0) {
+                ((Button) actionEvent.getSource()).setDisable(false);
+            }
 
         }
     }
+
 
     // FOR FULLY LOADED PAGE
 //                    webview.getEngine().getLoadWorker().stateProperty().addListener(
@@ -177,11 +218,24 @@ public class MainUIController {
 //                            } );
 
 
-    private void showNextNews() {
-        if (availableNews.size() > 0 && currentNewsIndex <= availableNews.size()) {
-            currentNewsIndex += 1;
+    private void showNextNews(ActionEvent actionEvent) {
+        if (actionEvent != null && actionEvent.getSource() instanceof Button) {
+            ((Button) actionEvent.getSource()).setDisable(true);
+        }
+        if (availableNews.size() > 0 && currentNewsIndex < availableNews.size()) {
             String fullHtml = getNewsAsHtml();
+            currentNewsIndex += 1;
+            log.info("Current page counter: {}", currentNewsIndex);
+            log.info("Available news: {}", availableNews.size());
             mainWebView.getEngine().loadContent(fullHtml, "text/html");
+        }
+        if (previousNewsButton.isDisabled()) {
+            previousNewsButton.setDisable(false);
+        }
+        if (actionEvent != null && actionEvent.getSource() instanceof Button) {
+            if (currentNewsIndex + 1 != availableNews.size()) {
+                ((Button) actionEvent.getSource()).setDisable(false);
+            }
         }
     }
 
@@ -194,24 +248,21 @@ public class MainUIController {
             }
         };
         updateTask.setOnSucceeded(evt -> {
-            // we're on the JavaFX application thread here
             log.info("News updated!");
             List<NewsModel> newsModelList = newsService.getAllNews();
             if (newsModelList != null && newsModelList.size() > 0) {
                 log.info("There is some news...");
                 availableNews.addAll(newsModelList);
                 log.info("News loaded and added!");
-                showNextNews();
-//                if (newsTextData.getChildrenTextData() != null) {
-//                    String textToSetInWebView = newsTextData.getHtmlString();
-//                    mainNewsView.getEngine().loadContent(textToSetInWebView, "text/html");
-//                }
+                showNextNews(null);
+            } else {
+                log.warn("No news to show");
             }
         });
 
         updateTask.setOnFailed(evt -> {
             log.error("News not updated!");
         });
-        new Thread(updateTask).start();
+        executor.execute(new Thread(updateTask));
     }
 }

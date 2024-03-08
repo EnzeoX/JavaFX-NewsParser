@@ -34,6 +34,12 @@ public class NewsEntity {
     @Column(name = "publication_time")
     private LocalDateTime publicationTime;
 
+    @Column(name = "news_header_media")
+    private String newsHeaderMedia;
+
+    @Column(name = "news_media_url")
+    private String newsMediaUrl;
+
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "news", cascade = CascadeType.ALL)
     private List<NewsTextData> newsTextData;
 }
