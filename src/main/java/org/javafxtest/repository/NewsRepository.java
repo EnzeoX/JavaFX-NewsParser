@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author Nikolay Boyko
@@ -21,6 +22,9 @@ public interface NewsRepository extends JpaRepository<NewsEntity, Long> {
     @Query(value = "SELECT * FROM news_table WHERE news_name=:name ORDER BY publication_time DESC LIMIT 1", nativeQuery = true)
     NewsEntity getLatestNewsFor(String name);
 
+    @Query(value = "SELECT * FROM news_table ORDER BY DATE(publication_time) DESC", nativeQuery = true)
+    List<NewsEntity> getAllNewsOrdered();
+
     @Transactional
     @Modifying
     @Query(value = "DELETE FROM news_table WHERE DATE(publication_time) <> :todayDate", nativeQuery = true)
@@ -28,4 +32,7 @@ public interface NewsRepository extends JpaRepository<NewsEntity, Long> {
 
     @Query(value = "SELECT IF (COUNT(publication_time) > 0, 'true', 'false') FROM news_table WHERE DATE(publication_time) <> :todayDate", nativeQuery = true)
     boolean hasRowsNotToday(@Param("todayDate") LocalDate todayDate);
+
+    @Query(value = "SELECT * FROM news_table WHERE publication_time BETWEEN :timeFrom AND :timeTo ORDER BY DATE(publication_time) DESC", nativeQuery = true)
+    List<NewsEntity> getNewsBetween(LocalDateTime timeFrom, LocalDateTime timeTo);
 }

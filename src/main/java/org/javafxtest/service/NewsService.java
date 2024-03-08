@@ -11,6 +11,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -106,8 +107,33 @@ public class NewsService {
     }
 
     public List<NewsModel> getAllNews() {
-        List<NewsEntity> entityList = this.newsRepository.findAll();
+        List<NewsEntity> entityList = this.newsRepository.getAllNewsOrdered();
         return EntityModelMapper.listOfEntitiesToListOfModels(entityList);
+    }
+
+    public List<NewsModel> getNewsForTimePeriod(String timePeriod) {
+        LocalDateTime timeFrom;
+        LocalDateTime timeTo;
+        switch (timePeriod) {
+            case "morning":
+                timeFrom = LocalDate.now().atTime(6, 0);
+                timeTo = LocalDate.now().atTime(8, 59, 59);
+                break;
+            case "day":
+                timeFrom = LocalDate.now().atTime(9, 0);
+                timeTo = LocalDate.now().atTime(15, 59,59);
+                break;
+            case "evening":
+                timeFrom = LocalDate.now().atTime(16, 0);
+                timeTo = LocalDate.now().atTime(20, 59, 59);
+                break;
+            default:
+                timeFrom = LocalDate.now().atTime(0, 0);
+                timeTo = LocalDate.now().atTime(23, 59, 59);
+                break;
+        }
+        return EntityModelMapper.listOfEntitiesToListOfModels(
+                this.newsRepository.getNewsBetween(timeFrom, timeTo));
     }
 
     public NewsEntity getActualNewsFor(String newsName) {

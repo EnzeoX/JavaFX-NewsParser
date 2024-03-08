@@ -1,15 +1,14 @@
 package org.javafxtest.controller.gui;
 
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuButton;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -48,14 +47,21 @@ public class MainUIController {
 
     private int currentNewsIndex = 0;
 
+    private NewsModel currentNews = null;
+
+    private String currentActiveItem = null;
+
     //    @Autowired
-    private NewsService newsService;
+    private final NewsService newsService;
 
     @FXML
     private VBox bodyPane;
 
     @FXML
     private GridPane bottomGridPane;
+
+    @FXML
+    private HBox bottomHBox;
 
     @FXML
     private Label currentNewsLabel;
@@ -65,6 +71,9 @@ public class MainUIController {
 
     @FXML
     private GridPane headerGridPane;
+
+    @FXML
+    private HBox headerHBox;
 
     @FXML
     private GridPane mainGridPane;
@@ -85,7 +94,7 @@ public class MainUIController {
     private Label timePeriodLabel;
 
     @FXML
-    private MenuButton timePeriodSelection;
+    private ComboBox<String> timePeriodSelection;
 
     @FXML
     private Button toMainMenuButton;
@@ -113,6 +122,18 @@ public class MainUIController {
 //                log.info("Page loaded");
 //            }
 //        });
+        String[] timePeriods = {"all", "morning", "day", "evening"};
+        currentActiveItem = "all";
+        timePeriodSelection.setItems(FXCollections.observableArrayList(timePeriods));
+        timePeriodSelection.getSelectionModel().selectFirst();
+        timePeriodSelection.setOnAction(actionEvent -> {
+//            Platform.runLater(() -> {
+                if (!currentActiveItem.equals(timePeriodSelection.getValue())) {
+                    currentActiveItem = timePeriodSelection.getValue();
+                    reloadNews(currentActiveItem);
+                }
+//            });
+        });
         nextNewsButton.setOnAction(actionEvent -> {
             if (!isExecutingPage.get()) {
                 Platform.runLater(() -> {
@@ -122,7 +143,7 @@ public class MainUIController {
                 });
             }
         });
-        reloadNews();
+        reloadNews(currentActiveItem);
     }
 
     private void backToMainMenu(ActionEvent actionEvent) {
@@ -143,12 +164,15 @@ public class MainUIController {
         }
     }
 
-    private void filterNews() {
-
+    private NewsModel getSelectedNewsModel() {
+        return availableNews.get(currentNewsIndex);
     }
 
-    private String getNewsAsHtml() {
-        NewsModel newsModel = availableNews.get(currentNewsIndex);
+    private void setNewsNameLabel(String name) {
+        this.currentNewsLabel.setText(name);
+    }
+
+    private String getNewsAsHtml(NewsModel newsModel) {
         if (newsModel.getNewsTextData() != null && newsModel.getNewsTextData().size() > 0) {
             StringBuilder fullHtml = new StringBuilder();
             fullHtml.append("<div>");
@@ -171,12 +195,26 @@ public class MainUIController {
         if (actionEvent != null && actionEvent.getSource() instanceof Button) {
             ((Button) actionEvent.getSource()).setDisable(true);
         }
-        if (availableNews.size() > 0 && currentNewsIndex - 1 > 0) {
-            currentNewsIndex -= 1;
-            log.info("Current page counter: {}", currentNewsIndex);
-            String fullHtml = getNewsAsHtml();
-            mainWebView.getEngine().loadContent(fullHtml, "text/html");
+        if (currentNews != null) {
+            int currentNewsId = this.availableNews.indexOf(currentNews);
+            if (currentNewsId == 0) {
+                if (actionEvent != null && actionEvent.getSource() instanceof Button) {
+                    ((Button) actionEvent.getSource()).setDisable(true);
+                }
+                return;
+            } else {
+                currentNewsIndex = currentNewsId - 1;
+            }
+
+        } else {
+            currentNewsIndex = 0;
         }
+        log.info("Current page counter: {}", currentNewsIndex);
+        NewsModel newsModel = getSelectedNewsModel();
+        currentNews = newsModel;
+        String fullHtml = getNewsAsHtml(newsModel);
+        setNewsNameLabel(newsModel.getNewsResourceName());
+        mainWebView.getEngine().loadContent(fullHtml, "text/html");
         if (nextNewsButton.isDisabled()) {
             nextNewsButton.setDisable(false);
         }
@@ -188,50 +226,33 @@ public class MainUIController {
         }
     }
 
-
-    // FOR FULLY LOADED PAGE
-//                    webview.getEngine().getLoadWorker().stateProperty().addListener(
-//                            new ChangeListener<Worker.State>() {
-//                                @Override
-//                                public void changed(
-//                                        ObservableValue<? extends Worker.State> observable,
-//                                        Worker.State oldValue, Worker.State newValue) {
-//                                    switch (newValue) {
-//                                        case SUCCEEDED:
-//                                        case FAILED:
-//                                        case CANCELLED:
-//                                            webview
-//                                                    .getEngine()
-//                                                    .getLoadWorker()
-//                                                    .stateProperty()
-//                                                    .removeListener(this);
-//                                    }
-//
-//
-//                                    if (newValue != Worker.State.SUCCEEDED) {
-//                                        return;
-//                                    }
-//
-//                                    // Your logic here
-//                                    System.out.println("page loaded");
-//                                }
-//                            } );
-
-
     private void showNextNews(ActionEvent actionEvent) {
         if (actionEvent != null && actionEvent.getSource() instanceof Button) {
             ((Button) actionEvent.getSource()).setDisable(true);
         }
-        if (availableNews.size() > 0 && currentNewsIndex < availableNews.size()) {
-            String fullHtml = getNewsAsHtml();
-            currentNewsIndex += 1;
-            log.info("Current page counter: {}", currentNewsIndex);
-            log.info("Available news: {}", availableNews.size());
-            mainWebView.getEngine().loadContent(fullHtml, "text/html");
+        if (currentNews != null) {
+            int currentNewsId = this.availableNews.indexOf(currentNews);
+            if (currentNewsId + 1 >= availableNews.size()) {
+                if (actionEvent != null && actionEvent.getSource() instanceof Button) {
+                    ((Button) actionEvent.getSource()).setDisable(true);
+                }
+                return;
+            } else {
+                currentNewsIndex = currentNewsId + 1;
+            }
+
+        } else {
+            currentNewsIndex = 0;
         }
         if (previousNewsButton.isDisabled()) {
             previousNewsButton.setDisable(false);
         }
+        log.info("Current page counter: {}", currentNewsIndex);
+        NewsModel newsModel = getSelectedNewsModel();
+        currentNews = newsModel;
+        String fullHtml = getNewsAsHtml(newsModel);
+        setNewsNameLabel(newsModel.getNewsResourceName());
+        mainWebView.getEngine().loadContent(fullHtml, "text/html");
         if (actionEvent != null && actionEvent.getSource() instanceof Button) {
             if (currentNewsIndex + 1 != availableNews.size()) {
                 ((Button) actionEvent.getSource()).setDisable(false);
@@ -239,7 +260,7 @@ public class MainUIController {
         }
     }
 
-    private void reloadNews() {
+    private void reloadNews(String timePeriod) {
         Task<Void> updateTask = new Task<>() {
             @Override
             protected Void call() {
@@ -249,14 +270,22 @@ public class MainUIController {
         };
         updateTask.setOnSucceeded(evt -> {
             log.info("News updated!");
-            List<NewsModel> newsModelList = newsService.getAllNews();
+            List<NewsModel> newsModelList;
+            if (timePeriod == null || timePeriod.isEmpty() || timePeriod.equals("all")) {
+                newsModelList = newsService.getAllNews();
+            } else {
+                newsModelList = newsService.getNewsForTimePeriod(timePeriod);
+            }
             if (newsModelList != null && newsModelList.size() > 0) {
                 log.info("There is some news...");
+                availableNews.clear();
                 availableNews.addAll(newsModelList);
                 log.info("News loaded and added!");
+                resetCounters();
                 showNextNews(null);
             } else {
                 log.warn("No news to show");
+                noNewsPage();
             }
         });
 
@@ -264,5 +293,21 @@ public class MainUIController {
             log.error("News not updated!");
         });
         executor.execute(new Thread(updateTask));
+    }
+
+    private void noNewsPage() {
+        String noNewsString = "<div style=\"width=100%; height=100%;\">" +
+                                    "<div style=\"width: 80%;height: auto;margin: 0 auto;padding: 10px;position: relative;\">" +
+                                        "<h1 style=\"text-align=center;width=50%;margin: 0 auto;\"> NO NEWS LOADED </h1>" +
+                                    "</div>" +
+                                "</div>";
+        mainWebView.getEngine().loadContent(noNewsString, "text/html");
+    }
+
+    private void resetCounters() {
+        currentNews = null;
+        currentNewsIndex = 0;
+        previousNewsButton.setDisable(true);
+        nextNewsButton.setDisable(false);
     }
 }

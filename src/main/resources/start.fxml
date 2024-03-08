@@ -29,12 +29,7 @@
       </AnchorPane>
       <AnchorPane fx:id="anchorPaneBody" prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1">
          <children>
-            <Button fx:id="mainLoadButton" layoutX="242.0" layoutY="107.0" mnemonicParsing="false" prefHeight="7.0" prefWidth="120.0" style="-fx-background-color: lightgray; -fx-background-radius: 20;" text="LOAD" textAlignment="CENTER" textFill="#443996" textOverrun="CLIP" AnchorPane.leftAnchor="242.0" AnchorPane.rightAnchor="238.0">
-               <font>
-                  <Font name="Bauhaus 93" size="18.0" />
-               </font>
-            </Button>
-            <Button fx:id="mainSettingsButton" layoutX="242.0" layoutY="152.0" mnemonicParsing="false" prefHeight="7.0" prefWidth="120.0" style="-fx-background-color: lightgray; -fx-background-radius: 20;" text="SETTINGS" textAlignment="CENTER" textFill="#443996" textOverrun="CLIP" AnchorPane.leftAnchor="242.0" AnchorPane.rightAnchor="238.0">
+            <Button fx:id="mainLoadButton" layoutX="200.0" layoutY="137.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="200.0" styleClass="style.css" stylesheets="@styles/style.css" text="LOAD" textAlignment="CENTER" textFill="#443996" textOverrun="CLIP" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="200.0">
                <font>
                   <Font name="Bauhaus 93" size="18.0" />
                </font>

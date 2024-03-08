@@ -2,9 +2,8 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.MenuButton?>
-<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
@@ -13,9 +12,9 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.web.WebView?>
 
-<VBox fx:id="mainVBoxPane" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="600.0" prefWidth="600.0" style="-fx-border-color: purple; -fx-border-width: 2;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.javafxtest.controller.gui.MainUIController">
+<VBox fx:id="mainVBoxPane" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.javafxtest.controller.gui.MainUIController">
    <children>
-      <GridPane fx:id="mainGridPane" style="-fx-background-color: grey;" VBox.vgrow="ALWAYS">
+      <GridPane fx:id="mainGridPane" minHeight="200.0" minWidth="600.0" VBox.vgrow="ALWAYS">
         <columnConstraints>
           <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
         </columnConstraints>
@@ -25,7 +24,7 @@
           <RowConstraints fillHeight="false" maxHeight="30.0" minHeight="30.0" prefHeight="30.0" valignment="CENTER" vgrow="NEVER" />
         </rowConstraints>
          <children>
-            <HBox alignment="CENTER" fillHeight="false" maxHeight="50.0" minHeight="50.0" prefHeight="50.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.valignment="CENTER" GridPane.vgrow="NEVER">
+            <HBox fx:id="headerHBox" alignment="CENTER" fillHeight="false" maxHeight="50.0" minHeight="50.0" prefHeight="50.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.valignment="CENTER" GridPane.vgrow="NEVER">
                <children>
                   <GridPane fx:id="headerGridPane" alignment="CENTER" maxHeight="50.0" minHeight="50.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="50.0" HBox.hgrow="NEVER">
                     <columnConstraints>
@@ -37,23 +36,18 @@
                       <RowConstraints fillHeight="false" maxHeight="50.0" minHeight="50.0" prefHeight="50.0" vgrow="NEVER" />
                     </rowConstraints>
                      <children>
-                        <Button fx:id="toMainMenuButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" text="To main menu" />
+                        <Button fx:id="toMainMenuButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="123.0" stylesheets="@styles/style.css" text="To main menu" />
                         <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.hgrow="ALWAYS" GridPane.vgrow="NEVER">
                            <children>
-                              <Label fx:id="timePeriodLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="17.0" prefWidth="100.0" text="Time period:" textAlignment="CENTER" />
-                              <MenuButton fx:id="timePeriodSelection" alignment="CENTER" contentDisplay="RIGHT" mnemonicParsing="false" prefHeight="25.0" prefWidth="124.0" text="All">
-                                <items>
-                                  <MenuItem mnemonicParsing="false" text="Action 1" />
-                                  <MenuItem mnemonicParsing="false" text="Action 2" />
-                                </items>
-                              </MenuButton>
+                              <Label fx:id="timePeriodLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="17.0" prefWidth="100.0" stylesheets="@styles/style.css" text="Time period:" textAlignment="CENTER" />
+                              <ComboBox fx:id="timePeriodSelection" prefHeight="25.0" prefWidth="90.0" stylesheets="@styles/style.css" />
                            </children>
                         </HBox>
                         <HBox fx:id="currentNewsPane" alignment="CENTER" fillHeight="false" maxHeight="100.0" minHeight="100.0" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.valignment="CENTER" GridPane.vgrow="NEVER">
                            <children>
-                              <Label fx:id="currentNewsLabel" text="The News" textAlignment="CENTER">
+                              <Label fx:id="currentNewsLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="31.0" prefWidth="150.0" stylesheets="@styles/style.css" textAlignment="CENTER">
                                  <font>
-                                    <Font name="Bauhaus 93" size="20.0" />
+                                    <Font name="Consolas" size="27.0" />
                                  </font>
                               </Label>
                            </children>
@@ -64,10 +58,10 @@
             </HBox>
             <VBox fx:id="bodyPane" alignment="CENTER" minHeight="100.0" minWidth="600.0" nodeOrientation="LEFT_TO_RIGHT" style="-fx-background-color: white;" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="CENTER" GridPane.vgrow="ALWAYS">
                <children>
-                  <WebView fx:id="mainWebView" minHeight="100.0" minWidth="600.0" prefHeight="-1.0" prefWidth="600.0" VBox.vgrow="ALWAYS" />
+                  <WebView fx:id="mainWebView" disable="true" minHeight="511.0" minWidth="600.0" prefHeight="511.0" prefWidth="600.0" VBox.vgrow="ALWAYS" />
                </children>
             </VBox>
-            <HBox alignment="CENTER" fillHeight="false" maxHeight="30.0" minHeight="30.0" prefHeight="30.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER" GridPane.vgrow="NEVER">
+            <HBox fx:id="bottomHBox" alignment="CENTER" fillHeight="false" maxHeight="30.0" minHeight="30.0" prefHeight="30.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER" GridPane.vgrow="NEVER">
                <children>
                   <GridPane fx:id="bottomGridPane" alignment="CENTER" maxHeight="30.0" minHeight="30.0" prefHeight="30.0" HBox.hgrow="NEVER">
                     <columnConstraints>
@@ -80,7 +74,7 @@
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
-                        <Button fx:id="previousNewsButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="159.0" text="Previous news" GridPane.columnIndex="1">
+                        <Button fx:id="previousNewsButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="159.0" stylesheets="@styles/style.css" text="Previous news" GridPane.columnIndex="1">
                            <padding>
                               <Insets left="5.0" right="5.0" />
                            </padding>
@@ -88,7 +82,7 @@
                               <Insets left="5.0" right="5.0" />
                            </GridPane.margin>
                         </Button>
-                        <Button fx:id="nextNewsButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="90.0" text="Next news" GridPane.columnIndex="2">
+                        <Button fx:id="nextNewsButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="90.0" stylesheets="@styles/style.css" text="Next news" GridPane.columnIndex="2">
                            <GridPane.margin>
                               <Insets left="5.0" right="5.0" />
                            </GridPane.margin>

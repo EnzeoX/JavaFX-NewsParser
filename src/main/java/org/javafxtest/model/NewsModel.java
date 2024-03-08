@@ -29,7 +29,7 @@ public class NewsModel {
 
     public String getDivMediaSource() {
         return this.urlMediaSource != null ?
-                "<div>" + "<" + this.sourceType + " style=\"max-width: 100%;max-height: 100vh;height: auto;\""
+                "<div style=\"max-width: 80%;margin-left: auto; margin-right: auto;\">" + "<" + this.sourceType + " style=\"max-width: 100%;max-height: 100vh;height: auto;\""
                         + " src=\"" + this.urlMediaSource + "\"/></div>" : "";
     }
 
@@ -39,15 +39,15 @@ public class NewsModel {
     }
 
     public String getDescriptionAsHtml() {
-        return this.newsDescription != null ?
-                "<div><i>" + this.newsDescription + "</i></div>" : "";
+        return this.newsDescription != null && !this.newsDescription.isEmpty() ?
+                "<div><i>\"" + this.newsDescription + "\"</i></div>" : "";
     }
 
     public String getNewsPublicationAsHtml() {
         if (this.publicationTime != null) {
 
-            String text = this.publicationTime.format(DateTimeFormatter.ofPattern("dd LLLL yyyy"));
-            return "<div style=\"margin-left: auto; margin-right: 0;\"><i>" + text + "</i></div>";
+            String text = this.publicationTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            return "<div style=\"margin-left: auto; margin-right: 0;\"><i> Publication time: " + text + "</i></div>";
         } else {
             return "";
         }
