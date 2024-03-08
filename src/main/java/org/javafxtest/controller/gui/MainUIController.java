@@ -143,6 +143,10 @@ public class MainUIController {
         }
     }
 
+    private void filterNews() {
+
+    }
+
     private String getNewsAsHtml() {
         NewsModel newsModel = availableNews.get(currentNewsIndex);
         if (newsModel.getNewsTextData() != null && newsModel.getNewsTextData().size() > 0) {
