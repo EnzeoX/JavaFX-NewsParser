@@ -2,6 +2,9 @@ package org.javafxtest.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 
@@ -23,7 +26,7 @@ public class NewsTextData {
     @Column(name = "text_data")
     private String textData;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_news", nullable = false)
     private NewsEntity news;
 }

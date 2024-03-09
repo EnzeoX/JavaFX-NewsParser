@@ -42,45 +42,94 @@ public class NewsService {
 
     public boolean checkForUpdates() {
         try {
-            long totalNewsInDb = this.newsRepository.count();
-            List<NewsModel> listOfLatestNews = new LinkedList<>();
-            if (totalNewsInDb > 0) {      // DB already contains some news, and just needs to be updated if so
-                log.info("Database contains news, updating...");
-                for (String newsName : parserNames) {
-                    List<NewsModel> newsModelList = getLatestNewsForName(newsName);
-                    if (newsModelList.size() > 0) {
-                        listOfLatestNews.addAll(newsModelList);
-                    }
-                }
-                if (listOfLatestNews.size() > 0) {
-                    log.info("Bunch of new news, adding data. List size: {}", listOfLatestNews.size());
-                    saveAllNews(listOfLatestNews);
-                }
-            } else {                                    // No data in DB, load all
-                log.info("Database is empty, trying to get some news...");
-                for (String name : parserNames) {
-                    List<NewsModel> parsedNews = parserMap.get(name).parseNewsResource();
-                    if (parsedNews.size() > 0) {
-                        listOfLatestNews.addAll(parsedNews);
-                    }
-                }
-            }
+            // first of all check for old data
+            removeAllRecordsForNotToday();
 
-            if (listOfLatestNews.size() > 0) {
-                // before all check if need to delete old records
-                if (this.newsRepository.hasRowsNotToday(LocalDate.now())) {
-                    log.info("Database contains old data, removing");
-                    removeAllRecordsForNotToday();
-                } else {
-                    log.info("Database don't have old data");
+            // then check if database still contains data
+
+            long itemsCount = newsRepository.count();
+            if (itemsCount > 0) {
+                log.debug("Database contains elements, updating");
+                // get data to list from Database
+                List<NewsModel> dataFromDb = EntityModelMapper
+                        .listOfEntitiesToListOfModels(newsRepository.getAllNewsOrdered());
+
+                // get parsed news
+                List<NewsModel> parsedData = new ArrayList<>();
+                for (String newsName : parserNames) {
+                    List<NewsModel> newsData = getLatestNewsForName(newsName);
+                    if (newsData.size() > 0) {
+                        parsedData.addAll(newsData);
+                    }
                 }
-                saveAllNews(listOfLatestNews);
-                return totalNewsInDb < listOfLatestNews.size();
+
+                // get only new data from parsed
+                if (parsedData.size() > 0) {
+                    log.info("New data parsed, total new data size: {}", parsedData.size());
+                    log.info("Total database elements: {}", dataFromDb.size());
+                    log.info("Getting new data");
+                    parsedData.removeAll(dataFromDb);
+                    if (parsedData.size() > 0) {
+                        log.info("List filtered for a new data, list size: {}", parsedData);
+                        saveAllNews(parsedData);
+                        return true;
+                    }
+                }
             } else {
-                return false;
+                log.info("Database is empty, trying to fill up");
+                List<NewsModel> parsedData = new ArrayList<>();
+                for (String newsName : parserNames) {
+                    List<NewsModel> newsData = getLatestNewsForName(newsName);
+                    if (newsData.size() > 0) {
+                        parsedData.addAll(newsData);
+                    }
+                }
+                if (parsedData.size() > 0) {
+                    log.info("New data parsed, total new data size: {}", parsedData.size());
+                    saveAllNews(parsedData);
+                    return true;
+                }
             }
+//            long totalNewsInDb = this.newsRepository.count();
+//            List<NewsModel> listOfLatestNews = new LinkedList<>();
+//            if (totalNewsInDb > 0) {      // DB already contains some news, and just needs to be updated if so
+//                log.info("Database contains news, updating...");
+//                for (String newsName : parserNames) {
+//                    List<NewsModel> newsModelList = getLatestNewsForName(newsName);
+//                    if (newsModelList.size() > 0) {
+//                        listOfLatestNews.addAll(newsModelList);
+//                    }
+//                }
+////                if (listOfLatestNews.size() > 0) {
+////                    log.info("Bunch of new news, adding data. List size: {}", listOfLatestNews.size());
+////                    saveAllNews(listOfLatestNews);
+////                }
+//            } else {                                    // No data in DB, load all
+//                log.info("Database is empty, trying to get some news...");
+//                for (String name : parserNames) {
+//                    List<NewsModel> parsedNews = parserMap.get(name).parseNewsResource();
+//                    if (parsedNews.size() > 0) {
+//                        listOfLatestNews.addAll(parsedNews);
+//                    }
+//                }
+//            }
+//
+//            if (listOfLatestNews.size() > 0) {
+//                // before all check if need to delete old records
+//                if (this.newsRepository.hasRowsNotToday(LocalDate.now())) {
+//                    log.info("Database contains old data, removing");
+//                    removeAllRecordsForNotToday();
+//                } else {
+//                    log.info("Database don't have old data");
+//                }
+//                saveAllNews(listOfLatestNews);
+//                return totalNewsInDb < listOfLatestNews.size();
+//            } else {
+//                return false;
+//            }
+            return false;
         } catch (Exception sqlException) {
-            log.error("SQL error message: {}", sqlException.getMessage());
+            log.error("Error message: {}", sqlException.getMessage());
             return false;
         }
     }
@@ -136,7 +185,7 @@ public class NewsService {
                 break;
             case "day":
                 timeFrom = LocalDate.now().atTime(9, 0).minusDays(1);
-                timeTo = LocalDate.now().atTime(15, 59,59).minusDays(1);
+                timeTo = LocalDate.now().atTime(15, 59, 59).minusDays(1);
                 break;
             case "evening":
                 timeFrom = LocalDate.now().atTime(16, 0).minusDays(1);
@@ -157,17 +206,21 @@ public class NewsService {
     }
 
     private List<NewsModel> getLatestNewsForName(String newsName) {
-        NewsEntity latestNewsEntity = getActualNewsFor(newsName);
+        NewsEntity latestNewsEntity = getActualNewsFor(newsName); // Actual news for news name by date
         List<NewsModel> parsedNews = parserMap.get(newsName).parseNewsResource();
         List<NewsModel> newNewsToAdd = new LinkedList<>();
-        for (NewsModel model : parsedNews) {
-            if (model == null) {
-                continue;
+        if (latestNewsEntity != null) {
+            for (NewsModel model : parsedNews) {
+                if (model == null) {
+                    continue;
+                }
+                if (model.getPublicationTime().isAfter(latestNewsEntity.getPublicationTime())) {
+                    log.info("New news has arrived");
+                    newNewsToAdd.add(model);
+                }
             }
-            if (model.getPublicationTime().isAfter(latestNewsEntity.getPublicationTime())) {
-                log.info("New news has arrived");
-                newNewsToAdd.add(model);
-            }
+        } else {
+            newNewsToAdd.addAll(parsedNews);
         }
         return newNewsToAdd;
     }

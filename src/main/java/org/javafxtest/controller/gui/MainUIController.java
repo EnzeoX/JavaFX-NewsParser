@@ -282,6 +282,8 @@ public class MainUIController {
         Task<List<NewsModel>> updateTask = new Task<>() {
             @Override
             protected List<NewsModel> call() {
+                log.info("Reloading news");
+//                loadingPageAnim();
                 List<NewsModel> list = newsService.getNewsForTimePeriod(timePeriod);
                 log.info("Returned list size: {}", list.size());
                 return list;
@@ -312,17 +314,31 @@ public class MainUIController {
 
         updateTask.setOnFailed(evt -> {
             log.error("News not updated!");
+            noNewsPage();
         });
         executor.execute(new Thread(updateTask));
     }
 
     private void noNewsPage() {
-        String noNewsString = "<div style=\"width=100%; height=100%;\">" +
-                                    "<div style=\"width: 80%;height: auto;margin: 0 auto;padding: 10px;position: relative;\">" +
-                                        "<h1 style=\"text-align=center;width=50%;margin: 0 auto;\"> NO NEWS LOADED </h1>" +
-                                    "</div>" +
-                                "</div>";
+        String noNewsString = "<div style=\"width=100%; height=100%;\">\n" +
+                "    <div style=\"width: 80%;height: auto;margin: 0 auto;padding: 10px;position: center;\">\n" +
+                "        <h1 style=\"width: 50%;text-align:center;margin: auto;vertical-align:middle;padding: 20% 20% 20% 20%;\">NO NEWS TO VIEW</h1>\n" +
+                "    </div>\n" +
+                "</div>";
         mainWebView.getEngine().loadContent(noNewsString, "text/html");
+        previousNewsButton.setDisable(true);
+        nextNewsButton.setDisable(true);
+    }
+
+    private void loadingPageAnim() {
+        String style = "margin: auto;border: 20px solid #EAF0F6;border-radius: 50%;border-top: 20px solid #FF7A59;\n" +
+                "  width: 200px;\n" +
+                "  height: 200px;\n" +
+                "  animation: spinner 4s linear infinite;   0% { transform: rotate(0deg); }\n" +
+                "  100% { transform: rotate(360deg); }";
+        String loadingPageString =
+                "<div class=\"loader\" style=\"" + style + "\"/>";
+        mainWebView.getEngine().loadContent(loadingPageString, "text/html");
     }
 
     private void resetCounters() {

@@ -126,7 +126,8 @@ public class JsoupTest {
                 newsTextDataList.add(newsTextData);
             }
         }
-        newsEntity.setNewsTextData(newsTextDataList);
+//        newsEntity.setNewsTextData(newsTextDataList);
+        newsEntity.getNewsTextData().addAll(newsTextDataList);
         log.info("NewsEntity: {}", newsEntity);
         log.info("Model loaded");
     }

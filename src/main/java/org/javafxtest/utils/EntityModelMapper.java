@@ -7,6 +7,7 @@ import org.javafxtest.model.NewsModel;
 import org.javafxtest.model.TextData;
 import org.jsoup.parser.Tag;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -54,7 +55,7 @@ public class EntityModelMapper {
                 newsTextData.setTextData(text.getHtmlString());
                 newsTextDataList.add(newsTextData);
             }
-            newsEntity.setNewsTextData(newsTextDataList);
+//            newsEntity.setNewsTextData(newsTextDataList);
         } else if (model.getNewsTextData() != null) {
             for (String text : model.getNewsTextData()) {
                 NewsTextData newsTextData = new NewsTextData();
@@ -63,7 +64,11 @@ public class EntityModelMapper {
                 newsTextDataList.add(newsTextData);
             }
         }
-        newsEntity.setNewsTextData(newsTextDataList);
+//        newsEntity.setNewsTextData(newsTextDataList);
+        if (newsEntity.getNewsTextData() == null) {
+            newsEntity.setNewsTextData(new HashSet<>());
+        }
+        newsEntity.getNewsTextData().addAll(newsTextDataList);
         return newsEntity;
     }
 

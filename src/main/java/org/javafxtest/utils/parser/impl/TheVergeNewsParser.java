@@ -182,13 +182,13 @@ public class TheVergeNewsParser extends AbstractParser {
             switch (tag) {
                 case "div":
                     if (element.attr("class").startsWith("duet--article--article-body-component clear-both block")) {
-                        log.info("Skipping duet--article--article-body-component clear-both block");
+//                        log.info("Skipping duet--article--article-body-component clear-both block");
                         return null;
                     }
                     DivTextData divTextData = new DivTextData(element.tag());
                     if (element.attr("class").equals("duet--article--article-body-component")
                      || element.attr("class").equals("mt-30")) {
-                        log.info("div element is element of content container, processing");
+//                        log.info("div element is element of content container, processing");
                         for (Element elem : element.children()) {
                             TextData elementData = processElements(elem);
                             if (elementData == null) {
