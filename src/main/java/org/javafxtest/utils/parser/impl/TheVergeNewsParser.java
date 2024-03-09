@@ -14,9 +14,7 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.w3c.dom.Text;
 
-import javax.swing.text.html.parser.TagElement;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -55,13 +53,17 @@ public class TheVergeNewsParser extends AbstractParser {
             Elements elements = doc.select("div.duet--content-cards--content-card.group.relative.z-10.flex.flex-row.items-center.justify-between.border-b.border-gray-cc.bg-white.py-16.text-black.max-w-container-sm");
             List<String> urls = new ArrayList<>();
             for (Element element : elements) {
-                String dateStr = doc.select("div.inline-block.text-gray-63").select("time[datetime]").attr("datetime"); // get published time
+                String dateStr = element.select("div.inline-block.text-gray-63").select("time[datetime]").attr("datetime"); // get published time
                 if (dateStr.isEmpty()) {
                     log.warn("No published time found");
                     continue;
                 }
                 LocalDateTime date = LocalDateTime.parse(dateStr, formatter);
-                if (LocalDateTime.now().getDayOfMonth() != date.getDayOfMonth()) { // exclude news if they are old
+                LocalDateTime now = LocalDateTime.now();
+                log.info("Today date and day: {}, {}; Date and day parsed from page: {}, {};",
+                        now, now.getDayOfMonth(),
+                        date, date.getDayOfMonth());
+                if (now.getDayOfMonth() != date.getDayOfMonth()) { // exclude news if they are old
                     log.warn("Processed date is not \"today\"");
                     continue;
                 }

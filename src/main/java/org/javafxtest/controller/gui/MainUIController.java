@@ -283,7 +283,6 @@ public class MainUIController {
             @Override
             protected List<NewsModel> call() {
                 log.info("Reloading news");
-//                loadingPageAnim();
                 List<NewsModel> list = newsService.getNewsForTimePeriod(timePeriod);
                 log.info("Returned list size: {}", list.size());
                 return list;

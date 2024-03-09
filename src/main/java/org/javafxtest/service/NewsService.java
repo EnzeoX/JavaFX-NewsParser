@@ -70,7 +70,7 @@ public class NewsService {
                     log.info("Getting new data");
                     parsedData.removeAll(dataFromDb);
                     if (parsedData.size() > 0) {
-                        log.info("List filtered for a new data, list size: {}", parsedData);
+                        log.info("List filtered for a new data, list size: {}", parsedData.size());
                         saveAllNews(parsedData);
                         return true;
                     }
@@ -143,21 +143,21 @@ public class NewsService {
         LocalDateTime timeTo;
         switch (timePeriod) {
             case "morning":
-                timeFrom = LocalDate.now().atTime(6, 0).minusDays(1);
-                timeTo = LocalDate.now().atTime(8, 59, 59).minusDays(1);
+                timeFrom = LocalDate.now().atTime(6, 0);
+                timeTo = LocalDate.now().atTime(8, 59, 59);
                 break;
             case "day":
-                timeFrom = LocalDate.now().atTime(9, 0).minusDays(1);
-                timeTo = LocalDate.now().atTime(15, 59, 59).minusDays(1);
+                timeFrom = LocalDate.now().atTime(9, 0);
+                timeTo = LocalDate.now().atTime(15, 59, 59);
                 break;
             case "evening":
-                timeFrom = LocalDate.now().atTime(16, 0).minusDays(1);
-                timeTo = LocalDate.now().atTime(20, 59, 59).minusDays(1);
+                timeFrom = LocalDate.now().atTime(16, 0);
+                timeTo = LocalDate.now().atTime(20, 59, 59);
                 break;
             case "all":
             default:
-                timeFrom = LocalDate.now().atTime(0, 0).minusDays(1);
-                timeTo = LocalDate.now().atTime(23, 59, 59).minusDays(1);
+                timeFrom = LocalDate.now().atTime(0, 0);
+                timeTo = LocalDate.now().atTime(23, 59, 59);
                 break;
         }
         List<NewsEntity> list = this.newsRepository.getNewsBetween(timeFrom, timeTo);
