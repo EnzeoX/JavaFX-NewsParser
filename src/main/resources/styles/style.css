@@ -24,11 +24,13 @@
 
 .combo-box-base:hover {
     -fx-color: lightgrey;
+    -fx-cursor: hand;
 }
 
 .combo-box-popup .list-view .list-cell:filled:hover {
     -fx-background-color: white;
     -fx-text-fill: -fx-text-inner-color;
+    -fx-cursor: hand;
 }
 
 .combo-box-popup .list-view .list-cell {
@@ -63,7 +65,7 @@
 }
 
 .combo-box-base:focused {
-    -fx-background-color: -fx-focus-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
+    -fx-background-color: -fx-focus-color, -fx-inner-border, -fx-body-color;
     /*-fx-background-radius: 6.4, 4, 5, 3;*/
     -fx-background-insets: -1.4, 0, 1, 2;
 }
