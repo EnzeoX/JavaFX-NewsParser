@@ -2,10 +2,14 @@ package org.javafxtest.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Nikolay Boyko
@@ -40,6 +44,16 @@ public class NewsEntity {
     @Column(name = "news_media_url")
     private String newsMediaUrl;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "news", cascade = CascadeType.ALL)
-    private List<NewsTextData> newsTextData;
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "news", cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REMOVE})
+    private Set<NewsTextData> newsTextData;
+
+    public void addNewsTextData(NewsTextData newsTextData) {
+        this.newsTextData.add(newsTextData);
+        newsTextData.setNews(this);
+    }
+
+    public void removeNewsTextData(NewsTextData newsTextData) {
+        this.newsTextData.remove(newsTextData);
+        newsTextData.setNews(null);
+    }
 }
