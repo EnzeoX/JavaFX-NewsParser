@@ -90,43 +90,6 @@ public class NewsService {
                     return true;
                 }
             }
-//            long totalNewsInDb = this.newsRepository.count();
-//            List<NewsModel> listOfLatestNews = new LinkedList<>();
-//            if (totalNewsInDb > 0) {      // DB already contains some news, and just needs to be updated if so
-//                log.info("Database contains news, updating...");
-//                for (String newsName : parserNames) {
-//                    List<NewsModel> newsModelList = getLatestNewsForName(newsName);
-//                    if (newsModelList.size() > 0) {
-//                        listOfLatestNews.addAll(newsModelList);
-//                    }
-//                }
-////                if (listOfLatestNews.size() > 0) {
-////                    log.info("Bunch of new news, adding data. List size: {}", listOfLatestNews.size());
-////                    saveAllNews(listOfLatestNews);
-////                }
-//            } else {                                    // No data in DB, load all
-//                log.info("Database is empty, trying to get some news...");
-//                for (String name : parserNames) {
-//                    List<NewsModel> parsedNews = parserMap.get(name).parseNewsResource();
-//                    if (parsedNews.size() > 0) {
-//                        listOfLatestNews.addAll(parsedNews);
-//                    }
-//                }
-//            }
-//
-//            if (listOfLatestNews.size() > 0) {
-//                // before all check if need to delete old records
-//                if (this.newsRepository.hasRowsNotToday(LocalDate.now())) {
-//                    log.info("Database contains old data, removing");
-//                    removeAllRecordsForNotToday();
-//                } else {
-//                    log.info("Database don't have old data");
-//                }
-//                saveAllNews(listOfLatestNews);
-//                return totalNewsInDb < listOfLatestNews.size();
-//            } else {
-//                return false;
-//            }
             return false;
         } catch (Exception sqlException) {
             log.error("Error message: {}", sqlException.getMessage());
