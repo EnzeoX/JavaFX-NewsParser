@@ -1,6 +1,7 @@
 package org.javafxtest.controller.gui;
 
 import javafx.application.HostServices;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -18,6 +19,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Nikolay Boyko
@@ -29,6 +31,8 @@ import java.io.IOException;
 public class StartMenuController {
 
     private final ApplicationContext applicationContext;
+
+    private final AtomicBoolean isLoadingNextView = new AtomicBoolean(false);
 
     @Autowired
     public StartMenuController(ApplicationContext applicationContext) {
@@ -59,18 +63,27 @@ public class StartMenuController {
     }
 
     private void loadNewsMenu(MouseEvent actionEvent) {
-        Stage stage;
-        try {
-            stage = (Stage) mainLoadButton.getScene().getWindow();
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/news_menu.fxml"));
-            fxmlLoader.setControllerFactory(this.applicationContext::getBean);
-            Parent root = fxmlLoader.load();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.sizeToScene();
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (!isLoadingNextView.get()) {
+            Platform.runLater(() -> {
+                isLoadingNextView.set(true);
+                mainLoadButton.setDisable(true);
+                Stage stage;
+                try {
+                    stage = (Stage) mainLoadButton.getScene().getWindow();
+                    FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/news_menu.fxml"));
+                    fxmlLoader.setControllerFactory(this.applicationContext::getBean);
+                    Parent root = fxmlLoader.load();
+                    Scene scene = new Scene(root);
+                    stage.setScene(scene);
+                    stage.sizeToScene();
+                    stage.show();
+                    isLoadingNextView.set(false);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    isLoadingNextView.set(false);
+                }
+                mainLoadButton.setDisable(false);
+            });
         }
     }
 }
