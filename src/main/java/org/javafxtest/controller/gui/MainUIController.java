@@ -8,7 +8,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -17,6 +19,7 @@ import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import org.javafxtest.model.NewsModel;
 import org.javafxtest.service.NewsService;
+import org.javafxtest.service.ScheduledService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -51,8 +54,8 @@ public class MainUIController {
 
     private String currentActiveItem = null;
 
-    //    @Autowired
     private final NewsService newsService;
+    private final ScheduledService scheduledService;
 
     @FXML
     private VBox bodyPane;
@@ -99,9 +102,15 @@ public class MainUIController {
     @FXML
     private Button toMainMenuButton;
 
-    public MainUIController(ApplicationContext applicationContext, NewsService newsService) {
+    @FXML
+    private Button updateNewsButton;
+
+    public MainUIController(ApplicationContext applicationContext,
+                            ScheduledService scheduledService,
+                            NewsService newsService) {
         this.newsService = newsService;
         this.applicationContext = applicationContext;
+        this.scheduledService = scheduledService;
     }
 
     @FXML
@@ -116,6 +125,16 @@ public class MainUIController {
                 });
             }
         });
+        this.scheduledService.addObjectToNotify(this.updateNewsButton);
+        updateNewsButton.setOnAction(actionEvent -> {
+            Platform.runLater(() -> {
+                reloadNews(currentActiveItem);
+                updateNewsButton.setDisable(true);
+                updateNewsButton.setOpacity(0);
+            });
+        });
+        updateNewsButton.setOpacity(0);
+        updateNewsButton.setDisable(true);
 //        mainWebView.getEngine().getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
 //            if (newState == Worker.State.SUCCEEDED) {
 //                // new page has loaded, process:
@@ -173,6 +192,7 @@ public class MainUIController {
     private String getNewsAsHtml(NewsModel newsModel) {
         if (newsModel.getNewsTextData() != null && newsModel.getNewsTextData().size() > 0) {
             StringBuilder fullHtml = new StringBuilder();
+//            fullHtml.append("<div style=\"text-align:center;\">");
             fullHtml.append("<div>");
             fullHtml.append(newsModel.getDivMediaSource());
             fullHtml.append(newsModel.getHeadlineAsHtml());
@@ -259,22 +279,25 @@ public class MainUIController {
     }
 
     private void reloadNews(String timePeriod) {
-        Task<Void> updateTask = new Task<>() {
+        Task<List<NewsModel>> updateTask = new Task<>() {
             @Override
-            protected Void call() {
-                newsService.checkForUpdates();
-                return null;
+            protected List<NewsModel> call() {
+                List<NewsModel> list = newsService.getNewsForTimePeriod(timePeriod);
+                log.info("Returned list size: {}", list.size());
+                return list;
             }
         };
         updateTask.setOnSucceeded(evt -> {
             log.info("News updated!");
             List<NewsModel> newsModelList;
-            if (timePeriod == null || timePeriod.isEmpty() || timePeriod.equals("all")) {
-                newsModelList = newsService.getAllNews();
-            } else {
-                newsModelList = newsService.getNewsForTimePeriod(timePeriod);
+            try {
+                newsModelList = updateTask.getValue();
+                log.info("NewsModel list size: {}", newsModelList.size());
+            } catch (Exception e) {
+                log.error("Error occurred while getting news data from DB, message: {}", e.getMessage());
+                return;
             }
-            if (newsModelList != null && newsModelList.size() > 0) {
+            if (newsModelList.size() > 0) {
                 log.info("There is some news...");
                 availableNews.clear();
                 availableNews.addAll(newsModelList);

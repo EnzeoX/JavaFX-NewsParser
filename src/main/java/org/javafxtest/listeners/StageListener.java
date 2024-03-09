@@ -48,6 +48,8 @@ public class StageListener implements ApplicationListener<FxRunner.StageReadyEve
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.sizeToScene();
+            stage.setMinHeight(600);
+            stage.setMinWidth(600);
             stage.setTitle(this.applicationTitle);
             stage.show();
         } catch (IOException e) {

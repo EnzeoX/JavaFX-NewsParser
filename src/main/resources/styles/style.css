@@ -12,6 +12,10 @@
     -fx-cursor: hand;
 }
 
+.button#updateNewsButton {
+    -fx-background-color: #37ff37;
+}
+
 .button {
     -fx-background-color: lightgrey;
     /*-fx-background-radius: 5;*/

@@ -25,7 +25,7 @@ public class UlTextData extends TextData {
             for (TextData data : getChildrenTextData()) {
                 builder.append(data.getHtmlString());
             }
-            builder.append(builder.append("</").append(getTextDataType()).append(">"));
+            builder.append("</").append(getTextDataType()).append(">");
         } else {
             builder.append("</>");
         }

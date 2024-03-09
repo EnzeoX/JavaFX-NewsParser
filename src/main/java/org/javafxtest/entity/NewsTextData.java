@@ -23,7 +23,7 @@ public class NewsTextData {
     @Column(name = "text_data")
     private String textData;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "id_news", nullable = false)
     private NewsEntity news;
 }

@@ -70,7 +70,7 @@ public class TheVergeNewsParser extends AbstractParser {
                     continue;
                 }
                 LocalDateTime date = LocalDateTime.parse(dateStr, formatter);
-                if (LocalDateTime.now().getDayOfMonth() != date.getDayOfMonth()) { // exclude news if they are old
+                if (LocalDateTime.now().getDayOfMonth() - 1 != date.getDayOfMonth()) { // exclude news if they are old
                     log.warn("Processed date is not \"today\"");
                     continue;
                 }
@@ -241,6 +241,7 @@ public class TheVergeNewsParser extends AbstractParser {
                         }
                     }
                     return liTextData;
+                case "h4":
                 case "h3":
                 case "h2":
                 case "h1":

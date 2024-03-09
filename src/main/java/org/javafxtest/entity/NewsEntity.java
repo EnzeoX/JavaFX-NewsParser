@@ -40,6 +40,6 @@ public class NewsEntity {
     @Column(name = "news_media_url")
     private String newsMediaUrl;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "news", cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "news", cascade = CascadeType.PERSIST)
     private List<NewsTextData> newsTextData;
 }

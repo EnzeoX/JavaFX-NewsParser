@@ -40,17 +40,11 @@ public class NewsService {
         this.newsRepository.deleteRowsNotToday(LocalDate.now());
     }
 
-    public void checkForUpdates() {
+    public boolean checkForUpdates() {
         try {
-            // before all check if need to delete old records
-            if (this.newsRepository.hasRowsNotToday(LocalDate.now())) {
-                log.info("Database contains old data, removing");
-                removeAllRecordsForNotToday();
-            } else {
-                log.info("Database don't have old data");
-            }
+            long totalNewsInDb = this.newsRepository.count();
             List<NewsModel> listOfLatestNews = new LinkedList<>();
-            if (this.newsRepository.count() > 0) {      // DB already contains some news, and just needs to be updated if so
+            if (totalNewsInDb > 0) {      // DB already contains some news, and just needs to be updated if so
                 log.info("Database contains news, updating...");
                 for (String newsName : parserNames) {
                     List<NewsModel> newsModelList = getLatestNewsForName(newsName);
@@ -71,11 +65,23 @@ public class NewsService {
                     }
                 }
             }
+
             if (listOfLatestNews.size() > 0) {
+                // before all check if need to delete old records
+                if (this.newsRepository.hasRowsNotToday(LocalDate.now())) {
+                    log.info("Database contains old data, removing");
+                    removeAllRecordsForNotToday();
+                } else {
+                    log.info("Database don't have old data");
+                }
                 saveAllNews(listOfLatestNews);
+                return totalNewsInDb < listOfLatestNews.size();
+            } else {
+                return false;
             }
         } catch (Exception sqlException) {
             log.error("SQL error message: {}", sqlException.getMessage());
+            return false;
         }
     }
 
@@ -86,10 +92,19 @@ public class NewsService {
         }
         List<NewsEntity> newsEntityList = EntityModelMapper.listOfModelsToEntity(listOfModels);
         try {
-            this.newsRepository.saveAll(newsEntityList);
+//            this.newsRepository.saveAll(newsEntityList);
+            if (newsEntityList.size() > 0) {
+                for (NewsEntity entity : newsEntityList) {
+                    saveNews(entity);
+                }
+            }
         } catch (Exception e) {
             log.error("SQL error message: {}", e.getMessage());
         }
+    }
+
+    public void saveNews(NewsEntity entity) {
+        this.newsRepository.save(entity);
     }
 
     public void saveNews(NewsModel data) {
@@ -116,24 +131,25 @@ public class NewsService {
         LocalDateTime timeTo;
         switch (timePeriod) {
             case "morning":
-                timeFrom = LocalDate.now().atTime(6, 0);
-                timeTo = LocalDate.now().atTime(8, 59, 59);
+                timeFrom = LocalDate.now().atTime(6, 0).minusDays(1);
+                timeTo = LocalDate.now().atTime(8, 59, 59).minusDays(1);
                 break;
             case "day":
-                timeFrom = LocalDate.now().atTime(9, 0);
-                timeTo = LocalDate.now().atTime(15, 59,59);
+                timeFrom = LocalDate.now().atTime(9, 0).minusDays(1);
+                timeTo = LocalDate.now().atTime(15, 59,59).minusDays(1);
                 break;
             case "evening":
-                timeFrom = LocalDate.now().atTime(16, 0);
-                timeTo = LocalDate.now().atTime(20, 59, 59);
+                timeFrom = LocalDate.now().atTime(16, 0).minusDays(1);
+                timeTo = LocalDate.now().atTime(20, 59, 59).minusDays(1);
                 break;
+            case "all":
             default:
-                timeFrom = LocalDate.now().atTime(0, 0);
-                timeTo = LocalDate.now().atTime(23, 59, 59);
+                timeFrom = LocalDate.now().atTime(0, 0).minusDays(1);
+                timeTo = LocalDate.now().atTime(23, 59, 59).minusDays(1);
                 break;
         }
-        return EntityModelMapper.listOfEntitiesToListOfModels(
-                this.newsRepository.getNewsBetween(timeFrom, timeTo));
+        List<NewsEntity> list = this.newsRepository.getNewsBetween(timeFrom, timeTo);
+        return EntityModelMapper.listOfEntitiesToListOfModels(list);
     }
 
     public NewsEntity getActualNewsFor(String newsName) {
