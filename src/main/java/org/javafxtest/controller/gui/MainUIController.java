@@ -262,7 +262,9 @@ public class MainUIController {
         } else {
             currentNewsIndex = 0;
         }
-        if (previousNewsButton.isDisabled()) {
+        if (currentNewsIndex == 0) {
+            previousNewsButton.setDisable(true);
+        } else if (previousNewsButton.isDisabled()) {
             previousNewsButton.setDisable(false);
         }
         log.info("Current page counter: {}", currentNewsIndex);
@@ -304,6 +306,10 @@ public class MainUIController {
                 availableNews.addAll(newsModelList);
                 log.info("News loaded and added!");
                 resetCounters();
+                previousNewsButton.setDisable(true);
+                if (newsModelList.size() == 1) {
+                    nextNewsButton.setDisable(true);
+                }
                 showNextNews(null);
             } else {
                 log.warn("No news to show");
