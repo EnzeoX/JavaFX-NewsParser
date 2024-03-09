@@ -24,8 +24,7 @@ public class ScheduledService {
         this.newsService = newsService;
     }
 
-    //    @Scheduled(cron = "*/20 * * * *")
-    @Scheduled(fixedRate = 25000)
+    @Scheduled(fixedRate = schedulerNewsUpdateTime)
     public void checkUpdatesForNews() {
         if (newsService.checkForUpdates()) {
             notifyObservers();

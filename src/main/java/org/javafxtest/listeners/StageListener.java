@@ -3,6 +3,7 @@ package org.javafxtest.listeners;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import org.javafxtest.FxRunner;
@@ -46,6 +47,7 @@ public class StageListener implements ApplicationListener<FxRunner.StageReadyEve
             fxmlLoader.setControllerFactory(this.applicationContext::getBean);
             Parent root = fxmlLoader.load();
             Scene scene = new Scene(root);
+            stage.getIcons().add(new Image("/appimg/ico.png"));
             stage.setScene(scene);
             stage.sizeToScene();
             stage.setMinHeight(600);
