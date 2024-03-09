@@ -52,37 +52,23 @@ public class TheVergeNewsParser extends AbstractParser {
         Objects.requireNonNull(resource, "No resource provided for parse");
         try {
             Document doc = Jsoup.connect(resource).get();
-            Elements elements = doc.select("div.duet--content-cards--content-card.group");
+            Elements elements = doc.select("div.duet--content-cards--content-card.group.relative.z-10.flex.flex-row.items-center.justify-between.border-b.border-gray-cc.bg-white.py-16.text-black.max-w-container-sm");
             List<String> urls = new ArrayList<>();
             for (Element element : elements) {
-                String dateStr = null;
-                try {
-                    dateStr = element.childNodes()
-                            .get(0).childNodes()
-                            .get(1).childNodes()
-                            .get(2).childNodes()
-                            .get(1).childNodes()
-                            .get(0).attr("datetime"); // gate datetime of news
-                } catch (IndexOutOfBoundsException ie) {
-                    log.error(ie.getMessage());
-                }
-                if (dateStr == null || dateStr.isBlank()) {
+                String dateStr = doc.select("div.inline-block.text-gray-63").select("time[datetime]").attr("datetime"); // get published time
+                if (dateStr.isEmpty()) {
+                    log.warn("No published time found");
                     continue;
                 }
                 LocalDateTime date = LocalDateTime.parse(dateStr, formatter);
-                if (LocalDateTime.now().getDayOfMonth() != date.getDayOfMonth()) { // exclude news if they are old
+                if (LocalDateTime.now().getDayOfMonth() -1 != date.getDayOfMonth()) { // exclude news if they are old
                     log.warn("Processed date is not \"today\"");
                     continue;
                 }
-                Element elem = element
+                String newsPageUrl = element
                         .select("h2.font-polysans.text-20.font-bold.tracking-1")
-                        .first();
-                if (elem == null) {
-                    log.warn("Element for query  \"h2.font-polysans.text-20.font-bold.tracking-1\" not found");
-                    continue;
-                }
-                String newsPageUrl = elem.childNodes().get(0).attr("href");
-                if (!newsPageUrl.isBlank() && newsPageUrl.length() > 1) {
+                        .select("a").attr("href");
+                if (!newsPageUrl.isEmpty() && newsPageUrl.length() > 1) {
                     urls.add(newsPageUrl);
                 }
             }
@@ -290,95 +276,4 @@ public class TheVergeNewsParser extends AbstractParser {
             return null;
         }
     }
-
-//    private Object elementProcessor(Element element) {
-//        String tag = element.tag().getName();
-//        switch (tag) {
-//            case "div":
-//                if (element.attr("class").startsWith("duet--article--article-body-component clear-both block")) {
-//                    log.info("Skipping duet--article--article-body-component clear-both block");
-//                    return "";
-//                }
-//                StringBuilder divTextAppender = new StringBuilder();
-//                if (element.attr("class").equals("duet--article--article-body-component")) {
-//                    log.info("div element is element of content container, processing");
-//                    for (Element elem : element.children()) {
-//                        divTextAppender.append(elementProcessor(elem));
-//                    }
-//                }
-//                return divTextAppender.toString();
-//            case "p":
-//                StringBuilder textBuilderForP = new StringBuilder();
-//                List<Node> children = element.childNodes();
-//                for (Node childrenElement : children) {
-//                    if (childrenElement instanceof TextNode) {
-//                        textBuilderForP.append(((TextNode) childrenElement).text());
-//                    } else if (childrenElement instanceof Element) {
-//                        Object textFromElement = elementProcessor((Element) childrenElement);
-//                        if (textFromElement != null) {
-//                            if (textFromElement instanceof String) {
-//                                textBuilderForP.append(textFromElement);
-//                            }
-//                        }
-//                    }
-//                }
-//                return textBuilderForP.toString();
-//            case "em":
-//                return element.text();
-//            case "ul":
-//                Elements liElements = element.select("li.duet--article--dangerously-set-cms-markup.mb-16.pl-12");
-//                StringBuilder liBuilderText = new StringBuilder();
-//                for (Element liElement : liElements) {
-//                    liBuilderText.append(liElement.text()).append("\n");
-//                    Elements aElements = liElement.select("a");
-//                    String collectedHref = aElements.attr("href");
-//                    if (!collectedHref.startsWith("https://")) {
-//                        liBuilderText.append(getResourceUrl().isBlank() ? "https://www.theverge.com" : getResourceUrl());
-//                    }
-//                    liBuilderText.append(collectedHref).append("\n\n");
-//                }
-//                return liBuilderText.toString();
-//            case "h3":
-//                StringBuilder h3Builder = new StringBuilder();
-//                h3Builder.append("<h3>");
-//                for (Node h3Node : element.children()) {
-//                    if (h3Node instanceof TextNode) {
-//                        h3Builder.append(((TextNode) h3Node).text());
-//                    } else if (h3Node instanceof Element) {
-//                        h3Builder.append((String) elementProcessor((Element) h3Node));
-//                    }
-//                }
-//                h3Builder.append("</h3>");
-//                return h3Builder.toString();
-//            case "a":
-//                StringBuilder textToReturn = new StringBuilder();
-//                for (Node nodes : element.childNodes()) {
-//                    if (nodes instanceof TextNode) {
-//                        textToReturn.append(((TextNode) nodes).text());
-//                        String collectedHref = element.attr("href");
-//                        if (!collectedHref.startsWith("https://")) {
-//                            collectedHref = getResourceUrl() + collectedHref;
-//                        }
-//                        textToReturn.append(" (").append(collectedHref).append(") ");
-//                    } else if (nodes instanceof Element) {
-//                        if (nodes.childNodes().size() > 1) {
-//                            for (Element nodesElement : ((Element) nodes).children()) {
-//                                textToReturn.append(elementProcessor(nodesElement));
-//                            }
-//                        } else if (nodes.childNodes().size() == 1) {
-//                            if (nodes.childNode(0) instanceof TextNode) {
-//                                textToReturn.append(((TextNode) nodes.childNode(0)).text());
-//                            } else {
-//                                textToReturn.append(elementProcessor((Element) nodes.childNode(0)));
-//                            }
-//                        }
-//                    }
-//                }
-//                return textToReturn.toString();
-//            default:
-//                log.warn("What is this tag? {}", tag);
-//                break;
-//        }
-//        return null;
-//    }
 }
