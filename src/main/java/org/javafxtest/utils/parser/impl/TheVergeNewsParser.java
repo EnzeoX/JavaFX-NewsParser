@@ -123,6 +123,9 @@ public class TheVergeNewsParser extends AbstractParser {
             String publishedTime = doc.select("time[datetime]").attr("datetime"); // get published time
             LocalDateTime date = LocalDateTime.parse(publishedTime, formatter);
             Element articleComponentContainer = article.select("div.duet--article--article-body-component-container").first();
+            // TODO fix parsing where no article body like in this situation
+            // https://www.theverge.com/24099978/asus-zenfone-11-ultra-review-screen-battery-camera
+
             Objects.requireNonNull(articleComponentContainer, "Article component container not found or null!");
             TextData mainTextData = new TextData(Tag.valueOf("div"));
             if (articleComponentContainer.children().size() > 1) {
@@ -167,6 +170,9 @@ public class TheVergeNewsParser extends AbstractParser {
     private TextData processElements(Element element) {
         try {
             String tag = element.tag().getName();
+            if (tag.matches("^h\\d$")) {
+                tag = String.valueOf(tag.charAt(0));
+            }
             switch (tag) {
                 case "div":
                     if (element.attr("class").startsWith("duet--article--article-body-component clear-both block")) {
@@ -229,10 +235,7 @@ public class TheVergeNewsParser extends AbstractParser {
                         }
                     }
                     return liTextData;
-                case "h4":
-                case "h3":
-                case "h2":
-                case "h1":
+                case "h":
                     HTextData hTextData = new HTextData(element.tag());
                     for (Node hNode : element.children()) {
                         if (hNode instanceof TextNode) {
@@ -269,7 +272,7 @@ public class TheVergeNewsParser extends AbstractParser {
                     }
                     return aTextData;
                 default:
-                    log.warn("Skipping unknown tag? {}", tag);
+                    log.warn("Skipping unknown tag {}", tag);
                     break;
             }
             return null;
